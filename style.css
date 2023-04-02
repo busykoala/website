@@ -1,0 +1,40 @@
+body {
+  margin: 0;
+  background-color: #292D3E;
+  color: #fff;
+  font-family: 'Fira Code', monospace;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  font-size: 15px;
+}
+
+a, a:active {
+  color: #fff;
+}
+
+#history {
+  // background-color: fuchsia;
+}
+
+#current {
+  // background-color: green;
+}
+
+#prompt {
+  display: flex;
+  align-items: center;
+}
+
+#input {
+  margin-left: -2px;
+  border: none;
+  background-color: #292D3E;
+  font-family: 'Fira Code', monospace;
+  color: #fff;
+  font-size: 15px;
+  flex-grow: 1;
+  border-radius: 5px;
+  outline: none;
+}
