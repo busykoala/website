@@ -117,7 +117,6 @@ inputElement.addEventListener('keydown', (event: KeyboardEvent) => {
 const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
 const desktopContent = document.getElementById("desktop")
 const mobileContent = document.getElementById("mobile")
-console.log(navigator.userAgent)
 if (desktopContent) {
   desktopContent.style.display = isMobileDevice ? "none" : ""
 }
