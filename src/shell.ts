@@ -8,6 +8,7 @@ import cmdEnv from "./cmds/env"
 import cmdFortune from "./cmds/fortune"
 import cmdCowsay from "./cmds/cowsay"
 import cmdEcho from "./cmds/echo"
+import cmdMkdir from "./cmds/mkdir"
 
 declare global {
   interface Window {
@@ -45,8 +46,6 @@ function runCommand() {
     output = getOutput(currendCommand)
   })
 
-  // if (input === "clear") { trail = "" }
-  // const output = getOutput(input)
   if (count < 1 || input.startsWith("clear")) {
     trailDiv!.innerHTML = `${trail}${prompt}${input}${output}`
     count++
@@ -70,6 +69,7 @@ function getOutput(input: string) {
   if (command === "help") { return cmdHelp(input, version) }
   else if (command === "cat") { return cmdCat(input) }
   else if (command === "ls") { return cmdLs(input) }
+  else if (command === "mkdir") { return cmdMkdir(input) }
   else if (command === "pwd") { return cmdPwd() }
   else if (command === "cd") { return cmdCd(input) }
   else if (command === "echo") { return cmdEcho(input) }

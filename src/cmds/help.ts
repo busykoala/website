@@ -9,6 +9,7 @@ function cmdHelp(_: string, version: string) {
     fortune<br>
     history<br>
     ls [FILE]<br>
+    mkdir [DIRECTORY]<br>
     pwd
   `
 }

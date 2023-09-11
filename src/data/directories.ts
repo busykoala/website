@@ -1,6 +1,6 @@
 import { files } from "./files"
 
-const rootDirs = [
+export const rootDirs = [
   "/",
   "/home",
   "/home/busykoala"
