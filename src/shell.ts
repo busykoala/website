@@ -59,6 +59,7 @@ function runCommand() {
   lastPwdElement.textContent = window.PWD
   history.push(input)
   inputDiv.value = ""
+  window.scrollTo(0, document.body.scrollHeight);
 }
 
 function getOutput(input: string) {
