@@ -16,13 +16,28 @@ export const files: BusykoalaFile[] = [
   },
   {
     directory: "/home/busykoala",
-    fileName: "employments.md",
+    fileName: "experience.md",
     content: `<br>
       # Employments<br>
-      - [2023-]: DevOps Engineer | Genossenschaft Migros Aare<br>
+      - [2023-]: DevOps Engineer | bespinian GmbH<br>
+      - [2023]: DevOps Engineer | Genossenschaft Migros Aare<br>
       - [2020-2022]: Security Engineer | cyllective AG<br>
       - [2018-2020]: Application Developer | 4teamwork AG<br>
       - [2017-2018]: Scientific Collaborator | Insel Gruppe
+      `
+  },
+  {
+    directory: "/home/busykoala",
+    fileName: "skillz.md",
+    content: `<br>
+      # Skillz<br>
+      - **Languages:** Python, Bash, JavaScript, TypeScript, HTML, CSS, SQL, Java<br>
+      - **Frameworks:** Django, Flask, FastAPI, Vue.js, React, Angular, Next.js, Express.js, Plone<br>
+      - **Tools:** Git, Docker, Kubernetes, Istio, ArgoCD, Ansible, Terraform, OPA, Prometheus, Grafana, Elasticsearch, Jenkins, AWS, Azure, GCP<br>
+      - **Databases:** PostgreSQL, MSSQL, MySQL, Redis, EventstoreDB, ZODB<br>
+      - **Testing:** Pytest, Jest, JUnit, Playwright, Cypress, Puppeteer, Selenium<br>
+      - **Operating Systems:** Linux, Windows, MacOS<br>
+      - **Others:** CI/CD, Agile, Scrum, Kanban, TDD, BDD, DevOps, SRE, IT-Security
       `
   },
   {
