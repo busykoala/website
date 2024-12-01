@@ -1,4 +1,15 @@
 import { TerminalCore, CommandFn, CommandArgs, CommandContext } from "./core/TerminalCore";
+import { help } from "./commands/help";
+import { clear } from "./commands/clear";
+import { ls } from "./commands/ls";
+import { cat } from "./commands/cat";
+import { pwd } from "./commands/pwd";
+import { cd } from "./commands/cd";
+import { history } from "./commands/history";
+import {echo} from "./commands/echo";
+import {env} from "./commands/env";
+import { exportEnv } from "./commands/export";
+import { unsetEnv } from "./commands/unset";
 
 // Initialize Terminal
 const terminal = new TerminalCore({
@@ -18,24 +29,17 @@ const terminal = new TerminalCore({
 
 // Commands
 const commands: Record<string, CommandFn> = {
-  help: {
-    description: "Displays a list of available commands",
-    usage: "help",
-    execute: (args: CommandArgs, context: CommandContext) => {
-      const commandList = Object.keys(context.env.COMMANDS)
-          .map((cmd) => `<strong>${cmd}</strong>: ${context.env.COMMANDS[cmd]}`)
-          .join("<br>");
-      return { output: `Available Commands:<br>${commandList}`, statusCode: 0 };
-    },
-  },
-  clear: {
-    description: "Clears the terminal screen",
-    usage: "clear",
-    execute: (args: CommandArgs, context: CommandContext) => {
-      document.getElementById("history")!.innerHTML = "";
-      return { output: "", statusCode: 0 };
-    },
-  },
+  cat,
+  cd,
+  clear,
+  echo,
+  env,
+  export: exportEnv,
+  help,
+  history,
+  ls,
+  pwd,
+  unset: unsetEnv,
 };
 
 // Register Commands
@@ -50,25 +54,27 @@ const promptDiv = document.getElementById("prompt") as HTMLDivElement;
 
 // Terminal Updates
 const updateTerminal = (input: string, output: string, statusCode: number) => {
+  // Add the command to the history
+  if (input.trim()) {
+    terminal.getContext().history.push(input); // Store the command in the terminal's history
+  }
+
   // Add a prefix to the new prompt if the status code indicates an error
-  const promptPrefix = statusCode > 1 ? `<span style="color:red;">x</span> ` : "";
+  const promptPrefix = statusCode > 1 ? `<span style="color:red;">x</span>` : "";
 
-  // Replace the input field in the previous prompt with the typed command
-  const executedPrompt = promptDiv.innerHTML.replace(
-      /<input.*?>/i, // Match the input element
-      `<span>${input}</span>` // Replace it with the typed command
-  );
+  // Clean up the prompt itself, ensuring no extra spaces or line breaks
+  const cleanedPrompt = promptDiv.innerHTML
+      .replace(/<input.*?>/i, `<span>${input}</span>`)
+      .replace(/\s+</g, "<");
 
-  // Append the current prompt and command output to the history
-  historyDiv.innerHTML += `${executedPrompt}${output}<br>`;
+  // Append the cleaned prompt and the command's output to the history
+  historyDiv.innerHTML += `<div>${cleanedPrompt}</div>`;
+  if (output) {
+    historyDiv.innerHTML += `<div>${output}</div>`;
+  }
 
   // Set up the new prompt with a fresh input field
-  promptDiv.innerHTML = `
-    ${promptPrefix}&nbsp;<span style="color:cornflowerblue;">website</span><span>@</span>
-    <span style="color:aqua;">busykoala</span>:<span style="color:lawngreen;" class="pwd">
-      ${terminal.getContext().env.PWD}
-    </span>$&nbsp;<input type="text" id="input" autofocus>
-  `;
+  promptDiv.innerHTML = `${promptPrefix}<span style="color:cornflowerblue;">website</span><span>@</span><span style="color:aqua;">busykoala</span>:<span style="color:lawngreen;" class="pwd">${terminal.getContext().env.PWD}</span>$&nbsp;<input type="text" id="input" autofocus>`;
 
   // Ensure the new input field is focused
   const newInputField = document.getElementById("input") as HTMLInputElement;
@@ -100,6 +106,11 @@ document.addEventListener("keydown", (e) => {
     e.preventDefault();
     const inputField = document.getElementById("input") as HTMLInputElement;
     if (inputField) inputField.value = terminal.tabComplete(inputField.value);
+  }
+  if (e.ctrlKey && e.key.toLowerCase() === "l") { // Handle Ctrl+L to clear the terminal
+    e.preventDefault(); // Prevent the default browser behavior for Ctrl+L
+    terminal.execute("clear"); // Execute the 'clear' command
+    updateTerminal("", "", 0); // Clear the terminal visually
   }
 });
 

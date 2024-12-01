@@ -1,43 +1,65 @@
 import { parseInput } from "./CommandParser";
+import { FileSystem } from "./filesystem";
 
 export interface CommandContext {
     env: {
-        PWD: string;         // Current working directory
-        HOME: string;        // Home directory
-        EDITOR: string;      // Default editor
-        PATH: string;        // PATH variable
-        SHELL: string;       // Shell type
-        USER: string;        // User name
-        COMMANDS: Record<string, string>; // Registered command descriptions
-        [key: string]: any;  // Allow additional environment variables
+        PWD: string;
+        HOME: string;
+        EDITOR: string;
+        PATH: string;
+        SHELL: string;
+        USER: string;
+        COMMANDS: Record<string, string>;
+        [key: string]: any;
     };
-    version: string;       // Shell version
-    history: string[];     // Command history
-    files: Record<string, string>; // Simulated file system
+    version: string;
+    history: string[];
+    files: Record<string, string>;
+    terminal: TerminalCore;
 }
 
 export interface CommandArgs {
-    positional: string[];  // Positional arguments like file paths
-    flags: Record<string, string | boolean>; // Parsed flags, boolean or with values
+    positional: string[];
+    flags: Record<string, string | boolean>;
 }
 
 export interface CommandFn {
-    description: string; // Description of the command
-    usage?: string;      // Optional usage information
+    description: string;
+    usage?: string;
     execute: (args: CommandArgs, context: CommandContext) => { output: string; statusCode: number };
 }
 
 export class TerminalCore {
-    private commands: Record<string, CommandFn['execute']> = {};
+    private commands: Record<string, CommandFn["execute"]> = {};
     private history: string[] = [];
     private historyIndex = 0;
     private context: CommandContext;
+    private fileSystem: FileSystem;
 
-    constructor(context: CommandContext) {
-        this.context = context;
+    constructor(context: Omit<CommandContext, "terminal">) {
+        this.fileSystem = new FileSystem();
+
+        // Initialize context with the terminal reference
+        this.context = {
+            ...context,
+            terminal: this,
+        };
+
+        this.fileSystem.addDirectory("/", "home", "root");
+        this.fileSystem.addDirectory("/home", "busykoala", "busykoala");
+        this.fileSystem.addFile("/home/busykoala", "README.txt", "Welcome to the mock filesystem!", "busykoala");
+        this.fileSystem.addFile(
+            "/home/busykoala",
+            "multiline.txt",
+            `This is line 1\nThis is line 2\nThis is line 3\nEnd of file.`
+        );
     }
 
-    registerCommand(name: string, fn: CommandFn['execute']): void {
+    getFileSystem() {
+        return this.fileSystem;
+    }
+
+    registerCommand(name: string, fn: CommandFn["execute"]): void {
         this.commands[name] = fn;
     }
 
@@ -47,7 +69,29 @@ export class TerminalCore {
         this.history.push(input);
         this.historyIndex = this.history.length;
 
-        const [commandName, ...args] = input.split(" ");
+        // Split the input into individual commands by pipe
+        const commands = input.split("|").map((cmd) => cmd.trim());
+        let currentOutput = "";
+        let statusCode = 0;
+
+        for (const [index, command] of commands.entries()) {
+            // Handle piping by injecting the previous output as a special flag
+            const isPiped = index > 0; // True if this command is after a pipe
+            const result = this.executeCommand(command, isPiped ? currentOutput : "");
+            currentOutput = result.output;
+            statusCode = result.statusCode;
+
+            if (statusCode !== 0) {
+                // Stop execution if a command fails
+                return { output: currentOutput, statusCode };
+            }
+        }
+
+        return { output: currentOutput, statusCode };
+    }
+
+    private executeCommand(command: string, input: string): { output: string; statusCode: number } {
+        const [commandName, ...args] = command.split(" ");
         const commandFn = this.commands[commandName];
 
         if (!commandFn) {
@@ -56,6 +100,12 @@ export class TerminalCore {
 
         try {
             const parsedArgs = parseInput(args.join(" "));
+
+            // Prepend the piped input as the first positional argument
+            if (input) {
+                parsedArgs.positional.unshift(input);
+            }
+
             return commandFn(parsedArgs, this.context);
         } catch (error) {
             if (error instanceof Error) {
