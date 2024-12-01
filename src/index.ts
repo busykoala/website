@@ -10,6 +10,26 @@ import {echo} from "./commands/echo";
 import {env} from "./commands/env";
 import { exportEnv } from "./commands/export";
 import { unsetEnv } from "./commands/unset";
+import {touch} from "./commands/touch";
+import {chmod} from "./commands/chmod";
+import {chown} from "./commands/chown";
+import {cp} from "./commands/cp";
+import {date} from "./commands/date";
+import {df} from "./commands/df";
+import {du} from "./commands/du";
+import {find} from "./commands/find";
+import {grep} from "./commands/grep";
+import {head} from "./commands/head";
+import {mkdir} from "./commands/mkdir";
+import {mv} from "./commands/mv";
+import {rm} from "./commands/rm";
+import {tail} from "./commands/tail";
+import {tree} from "./commands/tree";
+import {uname} from "./commands/uname";
+import {wc} from "./commands/wc";
+import {whoami} from "./commands/whoami";
+import {fortune} from "./commands/fortune";
+import {cowsay} from "./commands/cowsay";
 
 // Initialize Terminal
 const terminal = new TerminalCore({
@@ -31,15 +51,35 @@ const terminal = new TerminalCore({
 const commands: Record<string, CommandFn> = {
   cat,
   cd,
+  chmod,
+  chown,
   clear,
+  cp,
+  date,
+  df,
+  du,
   echo,
   env,
   export: exportEnv,
+  find,
+  grep,
+  head,
   help,
   history,
+  fortune,
+  cowsay,
   ls,
+  mkdir,
+  mv,
   pwd,
+  rm,
+  tail,
+  touch,
+  tree,
+  uname,
   unset: unsetEnv,
+  wc,
+  whoami,
 };
 
 // Register Commands

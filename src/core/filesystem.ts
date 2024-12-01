@@ -134,4 +134,86 @@ export class FileSystem {
             throw new Error(`Directory '${path}' not found.`);
         }
     }
+
+    // Calculates the size of a directory or file (for `du`)
+    calculateSize(path: string): number {
+        const node = this.getNode(path);
+        if (!node) {
+            throw new Error(`Path '${path}' not found.`);
+        }
+
+        if (node.type === "file") {
+            return node.size;
+        }
+
+        // Recursively calculate the size of directories
+        const children = Object.values(node.children || {});
+        return children.reduce((total, child) => total + this.calculateSize(`${path}/${child.name}`), 0);
+    }
+
+    // Finds nodes by name (for `find`)
+    findNodes(path: string, name: string): string[] {
+        const dir = this.getNode(path);
+        if (!dir || dir.type !== "directory") {
+            throw new Error(`Directory '${path}' not found.`);
+        }
+
+        const results: string[] = [];
+        const children = Object.values(dir.children || {});
+
+        for (const child of children) {
+            if (child.name === name) {
+                results.push(`${path}/${child.name}`);
+            }
+
+            if (child.type === "directory") {
+                results.push(...this.findNodes(`${path}/${child.name}`, name));
+            }
+        }
+
+        return results;
+    }
+
+    // Removes a file or directory (for `rm` or `mv`)
+    removeNode(path: string): void {
+        const normalizedPath = this.normalizePath(path);
+        const parentPath = normalizedPath.substring(0, normalizedPath.lastIndexOf("/"));
+        const nodeName = normalizedPath.substring(normalizedPath.lastIndexOf("/") + 1);
+
+        const parent = this.getNode(parentPath);
+        if (parent && parent.type === "directory" && parent.children) {
+            delete parent.children[nodeName];
+        } else {
+            throw new Error(`Cannot remove '${path}'.`);
+        }
+    }
+
+    // Generates a tree view of the directory structure (for `tree`)
+    generateTree(path: string, depth: number = 0, isLast: boolean = true): string {
+        const dir = this.getNode(path);
+        if (!dir || dir.type !== "directory") {
+            throw new Error(`Directory '${path}' not found.`);
+        }
+
+        const children = Object.values(dir.children || {});
+
+        const treeLines = children.map((child, index) => {
+            const isChildLast = index === children.length - 1;
+
+            // Use HTML symbols for the tree structure
+            const indent = "&nbsp;".repeat(depth * 4); // 4 spaces per depth level
+            const branch = isChildLast ? "&nbsp;&nbsp;&nbsp;&nbsp;&#9492;&mdash;" : "&nbsp;&nbsp;&nbsp;&nbsp;&#9500;&mdash;";
+            const displayName = child.type === "directory" ? `<strong>${child.name}/</strong>` : child.name;
+
+            if (child.type === "directory") {
+                return `
+                <div>${indent}${branch} ${displayName}</div>
+                ${this.generateTree(`${path}/${child.name}`, depth + 1, isChildLast)}
+            `;
+            }
+            return `<div>${indent}${branch} ${displayName}</div>`;
+        });
+
+        return treeLines.join("");
+    }
 }
