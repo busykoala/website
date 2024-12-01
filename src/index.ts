@@ -32,6 +32,7 @@ import { fortune } from "./commands/fortune";
 import { cowsay } from "./commands/cowsay";
 import { sl } from "./commands/sl";
 import { cmatrix } from "./commands/cmatrix";
+import {alias} from "./commands/alias";
 
 class TerminalState {
   private static running = false;
@@ -79,6 +80,7 @@ const terminal = new TerminalCore({
 
 // Commands
 const commands: Record<string, CommandFn> = {
+  alias,
   cmatrix,
   cat,
   cd,

@@ -1,5 +1,6 @@
 import { parseInput } from "./CommandParser";
 import { FileSystem } from "./filesystem";
+import {aliases} from "../commands/alias";
 
 export interface CommandContext {
     env: {
@@ -97,10 +98,13 @@ export class TerminalCore {
 
     private executeCommand(command: string, input: string): { output: string; statusCode: number } {
         const [commandName, ...args] = command.split(" ");
-        const commandFn = this.commands[commandName];
+
+        // Check if the command is an alias and replace it with the original command
+        const expandedCommand = aliases[commandName] || commandName;
+        const commandFn = this.commands[expandedCommand];
 
         if (!commandFn) {
-            return { output: `<br>Command '${commandName}' not found.`, statusCode: 127 };
+            return { output: `<br>Command '${expandedCommand}' not found.`, statusCode: 127 };
         }
 
         try {
@@ -114,12 +118,13 @@ export class TerminalCore {
             return commandFn(parsedArgs, this.context);
         } catch (error) {
             if (error instanceof Error) {
-                return { output: `Error executing command '${commandName}': ${error.message}`, statusCode: 1 };
+                return { output: `Error executing command '${expandedCommand}': ${error.message}`, statusCode: 1 };
             } else {
-                return { output: `An unknown error occurred while executing '${commandName}'.`, statusCode: 1 };
+                return { output: `An unknown error occurred while executing '${expandedCommand}'.`, statusCode: 1 };
             }
         }
     }
+
 
     navigateHistory(direction: "up" | "down"): string {
         if (direction === "up" && this.historyIndex > 0) this.historyIndex--;
