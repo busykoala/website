@@ -9,20 +9,55 @@ export const ls: CommandFn = {
         const showHidden = args.flags.a === true;
 
         try {
-            const contents = context.terminal.getFileSystem().listDirectory(path, {
-                longFormat: showLong,
+            const entries = context.terminal.getFileSystem().listDirectory(path, {
                 showHidden,
+                longFormat: showLong,
             });
 
             if (showLong) {
-                const formattedContents = contents.map((entry) => {
-                    const [permissions, owner, size, date, name] = entry.split(/\s+/);
-                    return `${permissions.padEnd(10)} ${owner.padEnd(10)} ${size.padStart(6)} ${date} ${name}`;
+                const rows = entries.map((entry) => {
+                    const permissions = entry.permissions;
+                    const owner = entry.owner;
+                    const group = entry.group;
+                    const size = entry.size.toString();
+                    const date = entry.modified.toLocaleString();
+                    const name = entry.name;
+
+                    return `
+                        <tr>
+                            <td>${permissions}</td>
+                            <td>${owner}</td>
+                            <td>${group}</td>
+                            <td>${size}</td>
+                            <td>${date}</td>
+                            <td>${name}</td>
+                        </tr>
+                    `;
                 });
-                return { output: formattedContents.join("</br>"), statusCode: 0 };
+
+                const table = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Permissions</th>
+                                <th>Owner</th>
+                                <th>Group</th>
+                                <th>Size</th>
+                                <th>Date</th>
+                                <th>Name</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows.join("")}
+                        </tbody>
+                    </table>
+                `;
+                return { output: table, statusCode: 0 };
             }
 
-            return { output: contents.join(" "), statusCode: 0 }; // Space-separated for non-long format
+            // For non-long format, join file/directory names with a space
+            const names = entries.map((entry) => entry.name);
+            return { output: names.join(" "), statusCode: 0 };
         } catch (error) {
             return { output: `Error: ${(error as Error).message}`, statusCode: 1 };
         }

@@ -29,6 +29,18 @@ export interface CommandFn {
     execute: (args: CommandArgs, context: CommandContext) => { output: string; statusCode: number };
 }
 
+function addBaseFilesystem(fileSystem: FileSystem) {
+    fileSystem.addDirectory("/", "home", "root", "root");
+    fileSystem.addDirectory("/home", "busykoala", "busykoala", "busykoala");
+    fileSystem.addFile("/home/busykoala", "README.txt", "Welcome to the mock filesystem!", "busykoala", "busykoala");
+    fileSystem.addFile(
+        "/home/busykoala",
+        "multiline.txt",
+        `This is line 1\nThis is line 2\nThis is line 3\nEnd of file.`
+    );
+
+}
+
 export class TerminalCore {
     private commands: Record<string, CommandFn["execute"]> = {};
     private history: string[] = [];
@@ -45,14 +57,7 @@ export class TerminalCore {
             terminal: this,
         };
 
-        this.fileSystem.addDirectory("/", "home", "root");
-        this.fileSystem.addDirectory("/home", "busykoala", "busykoala");
-        this.fileSystem.addFile("/home/busykoala", "README.txt", "Welcome to the mock filesystem!", "busykoala");
-        this.fileSystem.addFile(
-            "/home/busykoala",
-            "multiline.txt",
-            `This is line 1\nThis is line 2\nThis is line 3\nEnd of file.`
-        );
+        addBaseFilesystem(this.fileSystem);
     }
 
     getFileSystem() {

@@ -14,6 +14,22 @@ a, a:active {
   color: #fff;
 }
 
+@keyframes trainMove {
+  from {
+    right: -250px; /* Start position off-screen to the right */
+  }
+  to {
+    right: 100vw; /* Move off-screen to the left */
+  }
+}
+
+#train-animation {
+  position: absolute;
+  font-family: monospace;
+  white-space: pre;
+  animation-timing-function: linear;
+}
+
 #history {
   // background-color: fuchsia;
 }

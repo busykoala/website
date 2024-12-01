@@ -30,6 +30,7 @@ import {wc} from "./commands/wc";
 import {whoami} from "./commands/whoami";
 import {fortune} from "./commands/fortune";
 import {cowsay} from "./commands/cowsay";
+import {sl} from "./commands/sl";
 
 // Initialize Terminal
 const terminal = new TerminalCore({
@@ -55,6 +56,7 @@ const commands: Record<string, CommandFn> = {
   chown,
   clear,
   cp,
+  sl,
   date,
   df,
   du,
