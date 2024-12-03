@@ -11,8 +11,9 @@ export const env: CommandFn = {
             return { output: "No environment variables set.", statusCode: 0 };
         }
 
-        // Format the environment variables for display
+        // Exclude the COMMANDS property and format the environment variables for display
         const formattedEnv = Object.entries(envVariables)
+            .filter(([key]) => key !== "COMMANDS") // Exclude COMMANDS
             .map(([key, value]) => `${key}=${value}`)
             .join("</br>");
 
