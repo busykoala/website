@@ -64,21 +64,43 @@ export class FileSystem {
         }
     }
 
-    addFile(path: string, name: string, content: string = "", owner: string = "root", group: string = "root", permissions: string = "rw-r--r--") {
+    addFile(
+        path: string,
+        name: string,
+        content: string = "",
+        owner: string = "root",
+        group: string = "root",
+        permissions: string = "rw-r--r--",
+        append: boolean = false // New parameter to handle appending
+    ) {
         const normalizedPath = this.normalizePath(path);
         const dir = this.getNode(normalizedPath);
         if (dir && dir.type === "directory") {
             if (!dir.children) dir.children = {};
-            dir.children[name] = {
-                type: "file",
-                name,
-                permissions,
-                owner,
-                group,
-                size: content.length,
-                modified: new Date(),
-                content,
-            };
+
+            const existingFile = dir.children[name];
+            if (existingFile && existingFile.type === "file") {
+                if (append) {
+                    existingFile.content = (existingFile.content || "") + content; // Append content
+                    existingFile.size += content.length;
+                    existingFile.modified = new Date();
+                } else {
+                    existingFile.content = content; // Overwrite content
+                    existingFile.size = content.length;
+                    existingFile.modified = new Date();
+                }
+            } else {
+                dir.children[name] = {
+                    type: "file",
+                    name,
+                    permissions,
+                    owner,
+                    group,
+                    size: content.length,
+                    modified: new Date(),
+                    content,
+                };
+            }
         } else {
             throw new Error(`Directory '${path}' not found.`);
         }

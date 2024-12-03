@@ -1,6 +1,5 @@
 import { parseInput } from "./CommandParser";
 import { FileSystem } from "./filesystem";
-import {aliases} from "../commands/alias";
 
 export interface CommandContext {
     env: {
@@ -97,34 +96,57 @@ export class TerminalCore {
     }
 
     private executeCommand(command: string, input: string): { output: string; statusCode: number } {
-        const [commandName, ...args] = command.split(" ");
+        const redirectionMatch = command.match(/(.+?)\s*(>>|>)\s*(\S+)$/);
+        let commandPart = command;
+        let redirectOperator = null;
+        let targetFile = null;
 
-        // Check if the command is an alias and replace it with the original command
-        const expandedCommand = aliases[commandName] || commandName;
-        const commandFn = this.commands[expandedCommand];
+        if (redirectionMatch) {
+            commandPart = redirectionMatch[1].trim();
+            redirectOperator = redirectionMatch[2];
+            targetFile = redirectionMatch[3];
+        }
+
+        console.log(commandPart, redirectOperator, targetFile);
+
+        const [commandName, ...args] = commandPart.split(" ");
+        const commandFn = this.commands[commandName]; // No alias logic
 
         if (!commandFn) {
-            return { output: `<br>Command '${expandedCommand}' not found.`, statusCode: 127 };
+            return { output: `<br>Command '${commandName}' not found.`, statusCode: 127 };
         }
 
         try {
             const parsedArgs = parseInput(args.join(" "));
-
-            // Prepend the piped input as the first positional argument
             if (input) {
                 parsedArgs.positional.unshift(input);
             }
 
-            return commandFn(parsedArgs, this.context);
+            const result = commandFn(parsedArgs, this.context);
+
+            if (redirectOperator && targetFile) {
+                const fileSystem = this.getFileSystem();
+
+                if (redirectOperator === ">") {
+                    // Overwrite the file
+                    fileSystem.addFile(this.context.env.PWD, targetFile, result.output, this.context.env.USER, this.context.env.USER, "rw-r--r--", false);
+                } else if (redirectOperator === ">>") {
+                    // Append to the file
+                    fileSystem.addFile(this.context.env.PWD, targetFile, result.output, this.context.env.USER, this.context.env.USER, "rw-r--r--", true);
+                }
+
+                return { output: "", statusCode: 0 };
+            }
+
+            return result;
         } catch (error) {
             if (error instanceof Error) {
-                return { output: `Error executing command '${expandedCommand}': ${error.message}`, statusCode: 1 };
+                return { output: `Error executing command '${commandName}': ${error.message}`, statusCode: 1 };
             } else {
-                return { output: `An unknown error occurred while executing '${expandedCommand}'.`, statusCode: 1 };
+                return { output: `An unknown error occurred while executing '${commandName}'.`, statusCode: 1 };
             }
         }
     }
-
 
     navigateHistory(direction: "up" | "down"): string {
         if (direction === "up" && this.historyIndex > 0) this.historyIndex--;
