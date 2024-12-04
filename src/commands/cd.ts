@@ -1,4 +1,4 @@
-import { CommandFn, CommandArgs, CommandContext } from "../core/TerminalCore";
+import {CommandFn, CommandArgs, CommandContext, group, user} from "../core/TerminalCore";
 
 export const cd: CommandFn = {
     description: "Changes the current working directory",
@@ -18,7 +18,7 @@ export const cd: CommandFn = {
         );
 
         try {
-            const node = context.terminal.getFileSystem().getNode(fullPath);
+            const node = context.terminal.getFileSystem().getNode(fullPath, user, group);
 
             if (!node) {
                 return { output: `Error: Directory '${targetPath}' not found.`, statusCode: 1 };

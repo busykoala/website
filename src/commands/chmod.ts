@@ -1,4 +1,4 @@
-import {CommandArgs, CommandContext, CommandFn} from "../core/TerminalCore";
+import {CommandArgs, CommandContext, CommandFn, group, user} from "../core/TerminalCore";
 
 export const chmod: CommandFn = {
     description: "Changes file permissions",
@@ -16,7 +16,7 @@ export const chmod: CommandFn = {
         );
 
         try {
-            const file = context.terminal.getFileSystem().getNode(filePath);
+            const file = context.terminal.getFileSystem().getNode(filePath, user, group);
             if (!file) {
                 return { output: `Error: '${filename}' not found`, statusCode: 1 };
             }

@@ -1,4 +1,4 @@
-import { CommandFn, CommandArgs, CommandContext } from "../core/TerminalCore";
+import {CommandFn, CommandArgs, CommandContext, user, group} from "../core/TerminalCore";
 
 export const ls: CommandFn = {
     description: "Lists directory contents",
@@ -9,7 +9,11 @@ export const ls: CommandFn = {
         const showHidden = args.flags.a === true;
 
         try {
-            const entries = context.terminal.getFileSystem().listDirectory(path, {
+            const fileSystem = context.terminal.getFileSystem();
+            const normalizedPath = fileSystem.normalizePath(path);
+
+            // Retrieve directory entries with the correct user and group
+            const entries = fileSystem.listDirectory(normalizedPath, user, group, {
                 showHidden,
                 longFormat: showLong,
             });

@@ -1,5 +1,10 @@
 import { parseInput } from "./CommandParser";
 import { FileSystem } from "./filesystem";
+import {addBaseFilesystem} from "./addBaseFilesystem";
+
+export const user = "busykoala";
+export const group = "busygroup";
+export const supplementaryGroups = ["staff", "developers"];
 
 export interface CommandContext {
     env: {
@@ -29,18 +34,6 @@ export interface CommandFn {
     execute: (args: CommandArgs, context: CommandContext) => { output: string; statusCode: number };
 }
 
-function addBaseFilesystem(fileSystem: FileSystem) {
-    fileSystem.addDirectory("/", "home", "root", "root");
-    fileSystem.addDirectory("/home", "busykoala", "busykoala", "busykoala");
-    fileSystem.addFile("/home/busykoala", "README.txt", "Welcome to the mock filesystem!", "busykoala", "busykoala");
-    fileSystem.addFile(
-        "/home/busykoala",
-        "multiline.txt",
-        `This is line 1\nThis is line 2\nThis is line 3\nEnd of file.`
-    );
-
-}
-
 export class TerminalCore {
     private commands: Record<string, CommandFn["execute"]> = {};
     private history: string[] = [];
@@ -57,6 +50,7 @@ export class TerminalCore {
             terminal: this,
         };
 
+        // Add the files that belong to the base file system
         addBaseFilesystem(this.fileSystem);
     }
 
@@ -107,8 +101,6 @@ export class TerminalCore {
             targetFile = redirectionMatch[3];
         }
 
-        console.log(commandPart, redirectOperator, targetFile);
-
         const [commandName, ...args] = commandPart.split(" ");
         const commandFn = this.commands[commandName]; // No alias logic
 
@@ -129,10 +121,14 @@ export class TerminalCore {
 
                 if (redirectOperator === ">") {
                     // Overwrite the file
-                    fileSystem.addFile(this.context.env.PWD, targetFile, result.output, this.context.env.USER, this.context.env.USER, "rw-r--r--", false);
+                    fileSystem.addFile(this.context.env.PWD, targetFile, user, group, user, group,
+                        result.output, "rw-r--r--", false // Overwrite mode
+                    );
                 } else if (redirectOperator === ">>") {
                     // Append to the file
-                    fileSystem.addFile(this.context.env.PWD, targetFile, result.output, this.context.env.USER, this.context.env.USER, "rw-r--r--", true);
+                    fileSystem.addFile(this.context.env.PWD, targetFile, user, group, user, group,
+                        result.output, "rw-r--r--", true // Append mode
+                    );
                 }
 
                 return { output: "", statusCode: 0 };

@@ -1,4 +1,4 @@
-import { TerminalCore, CommandFn, CommandArgs, CommandContext } from "./core/TerminalCore";
+import { TerminalCore, CommandFn } from "./core/TerminalCore";
 import { help } from "./commands/help";
 import { clear } from "./commands/clear";
 import { ls } from "./commands/ls";
@@ -32,6 +32,7 @@ import { fortune } from "./commands/fortune";
 import { cowsay } from "./commands/cowsay";
 import { sl } from "./commands/sl";
 import { cmatrix } from "./commands/cmatrix";
+import {id} from "./commands/id";
 
 class TerminalState {
   private static running = false;
@@ -79,14 +80,14 @@ const terminal = new TerminalCore({
 
 // Commands
 const commands: Record<string, CommandFn> = {
-  cmatrix,
   cat,
   cd,
   chmod,
   chown,
   clear,
+  cmatrix,
+  cowsay,
   cp,
-  sl,
   date,
   df,
   du,
@@ -94,17 +95,18 @@ const commands: Record<string, CommandFn> = {
   env,
   export: exportEnv,
   find,
+  fortune,
   grep,
   head,
   help,
   history,
-  fortune,
-  cowsay,
+  id,
   ls,
   mkdir,
   mv,
   pwd,
   rm,
+  sl,
   tail,
   touch,
   tree,

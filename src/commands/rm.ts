@@ -1,21 +1,34 @@
-import {CommandArgs, CommandContext, CommandFn} from "../core/TerminalCore";
+import {CommandArgs, CommandContext, CommandFn, group, user} from "../core/TerminalCore";
 
 export const rm: CommandFn = {
     description: "Removes files or directories",
-    usage: "rm <file>",
+    usage: "rm <file|directory>",
     execute: (args: CommandArgs, context: CommandContext) => {
         const target = args.positional[0];
         if (!target) {
-            return { output: "Error: No target specified", statusCode: 1 };
+            return { output: "Error: No target specified.", statusCode: 1 };
         }
 
-        const filePath = context.terminal.getFileSystem().normalizePath(
-            `${context.env.PWD}/${target}`
-        );
+        const fileSystem = context.terminal.getFileSystem();
+
+        const filePath = fileSystem.normalizePath(`${context.env.PWD}/${target}`);
 
         try {
-            context.terminal.getFileSystem().removeNode(filePath);
-            return { output: "", statusCode: 0 };
+            // Retrieve the target node
+            const targetNode = fileSystem.getNode(filePath, user, group);
+            if (!targetNode) {
+                return { output: `Error: '${target}' not found.`, statusCode: 1 };
+            }
+
+            // Check if the user has write permission to remove the target node
+            if (!fileSystem.hasPermission(targetNode, "write", user, group)) {
+                return { output: `Error: Permission denied to remove '${target}'.`, statusCode: 1 };
+            }
+
+            // Remove the node
+            fileSystem.removeNode(filePath, user, group);
+
+            return { output: `Successfully removed '${target}'.`, statusCode: 0 };
         } catch (error) {
             return { output: `Error: ${(error as Error).message}`, statusCode: 1 };
         }

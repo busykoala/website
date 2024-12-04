@@ -1,4 +1,4 @@
-import { CommandFn, CommandArgs, CommandContext } from "../core/TerminalCore";
+import {CommandFn, CommandArgs, CommandContext, user, group} from "../core/TerminalCore";
 
 export const cat: CommandFn = {
     description: "Displays file content",
@@ -16,7 +16,7 @@ export const cat: CommandFn = {
         );
 
         try {
-            const file = context.terminal.getFileSystem().getNode(fullPath);
+            const file = context.terminal.getFileSystem().getNode(fullPath, user, group);
 
             if (!file) {
                 return { output: `Error: '${fullPath}' does not exist`, statusCode: 1 };
