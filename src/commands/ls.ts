@@ -1,19 +1,21 @@
-import {CommandFn, CommandArgs, CommandContext, user, group} from "../core/TerminalCore";
+import {CommandArgs, CommandContext, CommandFn, group, user} from "../core/TerminalCore";
 
 export const ls: CommandFn = {
     description: "Lists directory contents",
     usage: "ls [-l] [-a] [path]",
     execute: (args: CommandArgs, context: CommandContext) => {
-        const path = args.positional[0] || context.env.PWD; // Use the first positional argument or PWD
+        console.log(args);
+        const inputPath = args.positional[0] || "."; // Default to current directory
+        const currentPath = context.env.PWD; // Current working directory
         const showLong = args.flags.l === true;
         const showHidden = args.flags.a === true;
 
         try {
             const fileSystem = context.terminal.getFileSystem();
-            const normalizedPath = fileSystem.normalizePath(path);
+            const resolvedPath = fileSystem.resolveRelativePath(inputPath, currentPath);
 
             // Retrieve directory entries with the correct user and group
-            const entries = fileSystem.listDirectory(normalizedPath, user, group, {
+            const entries = fileSystem.listDirectory(resolvedPath, user, group, {
                 showHidden,
                 longFormat: showLong,
             });

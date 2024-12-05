@@ -44,6 +44,17 @@ export class FileSystem {
         return "/" + stack.join("/");
     }
 
+    public resolveRelativePath(inputPath: string, currentPath: string): string {
+        if (inputPath.startsWith("/")) {
+            // Absolute path
+            return this.normalizePath(inputPath);
+        } else {
+            // Relative path
+            const combinedPath = `${currentPath}/${inputPath}`;
+            return this.normalizePath(combinedPath);
+        }
+    }
+
     // Check permissions for a node
     public static hasPermission(
         node: FileSystemNode,
