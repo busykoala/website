@@ -1,0 +1,135 @@
+import { user } from "../TerminalCore";
+import { InitFileSystemNode } from "../addBaseFilesystem";
+
+export const baseFiles: InitFileSystemNode[] = [
+    // Files in /bin
+    {
+        type: "file",
+        directory: "/bin",
+        name: "bash",
+        permissions: "rwxr-xr-x",
+        owner: "root",
+        group: "root",
+        size: 64, // Placeholder size (can be adjusted dynamically)
+        modified: new Date(),
+        content: "7f454c4602010100000000000000000002003e0001000000780000000000000000400000000000000000f00000000000000000800000010000000",
+    },
+    {
+        type: "file",
+        directory: "/bin",
+        name: "ls",
+        permissions: "rwxr-xr-x",
+        owner: "root",
+        group: "root",
+        size: 64,
+        modified: new Date(),
+        content: "7f454c4602010100000000000000000002003e0002000000840000000000000000400000000000000000f00000000000000000800000020000000",
+    },
+    {
+        type: "file",
+        directory: "/bin",
+        name: "cat",
+        permissions: "rwxr-xr-x",
+        owner: "root",
+        group: "root",
+        size: 64,
+        modified: new Date(),
+        content: "7f454c4602010100000000000000000002003e0003000000900000000000000000400000000000000000f00000000000000000800000030000000",
+    },
+
+    // Files in /etc
+    {
+        type: "file",
+        directory: "/etc",
+        name: "passwd",
+        permissions: "rw-r--r--",
+        owner: "root",
+        group: "root",
+        size: 128,
+        modified: new Date(),
+        content: `root:x:0:0:root:/root:/bin/bash\n${user}:x:1000:1000:${user}:/home/${user}:/bin/bash`,
+    },
+    {
+        type: "file",
+        directory: "/etc",
+        name: "shadow",
+        permissions: "rw-------",
+        owner: "root",
+        group: "root",
+        size: 128,
+        modified: new Date(),
+        content: `root:*:18745:0:99999:7:::\n${user}:*:18745:0:99999:7:::`,
+    },
+    {
+        type: "file",
+        directory: "/etc",
+        name: "hosts",
+        permissions: "rw-r--r--",
+        owner: "root",
+        group: "root",
+        size: 128,
+        modified: new Date(),
+        content: `127.0.0.1   localhost\n::1         localhost\n127.0.1.1   busykoala.localdomain busykoala`,
+    },
+    {
+        type: "file",
+        directory: "/etc",
+        name: "fstab",
+        permissions: "rw-r--r--",
+        owner: "root",
+        group: "root",
+        size: 256,
+        modified: new Date(),
+        content: `# <file system> <mount point>   <type>  <options>       <dump>  <pass>\nproc            /proc           proc    defaults        0       0\nUUID=123e4567-e89b-12d3-a456-426614174000 / ext4 errors=remount-ro 0 1`,
+    },
+
+    // Files in /boot
+    {
+        type: "file",
+        directory: "/boot",
+        name: "vmlinuz",
+        permissions: "rwxr-xr-x",
+        owner: "root",
+        group: "root",
+        size: 64,
+        modified: new Date(),
+        content: "7f454c4602010100000000000000000002003e0004000000a0000000000000000040000000000000000f00000000000000000800000040000000",
+    },
+    {
+        type: "file",
+        directory: "/boot",
+        name: "initrd",
+        permissions: "rwxr-xr-x",
+        owner: "root",
+        group: "root",
+        size: 64,
+        modified: new Date(),
+        content: "7f454c4602010100000000000000000002003e0005000000ac0000000000000000400000000000000000f00000000000000000800000050000000",
+    },
+
+    // Files in /lib
+    {
+        type: "file",
+        directory: "/lib",
+        name: "ld-linux.so.2",
+        permissions: "rwxr-xr-x",
+        owner: "root",
+        group: "root",
+        size: 64,
+        modified: new Date(),
+        content: "7f454c4602010100000000000000000002003e0006000000b8000000000000000040000000000000000f00000000000000000800000060000000",
+    },
+
+    // Files in /var/log
+    {
+        type: "file",
+        directory: "/var/log",
+        name: "syslog",
+        permissions: "rw-r--r--",
+        owner: "root",
+        group: "root",
+        size: 512,
+        modified: new Date(),
+        content: `Sep 30 12:00:00 localhost systemd[1]: Started Session 1 of user ${user}.\nSep 30 12:01:00 localhost kernel: [  0.123456] Fake kernel log message.`,
+    },
+];

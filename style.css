@@ -14,8 +14,44 @@ a, a:active {
   color: #fff;
 }
 
+@keyframes trainMove {
+  from {
+    right: -250px; /* Start position off-screen to the right */
+  }
+  to {
+    right: 100vw; /* Move off-screen to the left */
+  }
+}
+
+#train-animation {
+  position: absolute;
+  font-family: monospace;
+  white-space: pre;
+  animation-timing-function: linear;
+}
+
 #history {
   // background-color: fuchsia;
+}
+
+#history {
+  position: relative;
+  z-index: 1; /* Set lower z-index for terminal content */
+}
+
+#matrix-animation {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999; /* High z-index to overlay on top */
+  pointer-events: none;  /* Ensure the matrix doesn't block interaction */
+  font-family: monospace;
+  white-space: pre;
+  color: lime;
+  overflow: hidden;
+  line-height: 16px;
 }
 
 #current {
