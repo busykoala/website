@@ -1,4 +1,5 @@
 import {CommandArgs, CommandContext, CommandFn, group, user} from "../core/TerminalCore";
+import { FileSystem} from "../core/filesystem";
 
 export const tree: CommandFn = {
     description: "Displays directory structure in a tree format",
@@ -21,7 +22,7 @@ export const tree: CommandFn = {
                 return { output: `Error: '${path}' is not a directory.`, statusCode: 1 };
             }
 
-            if (!fileSystem.hasPermission(node, "read", user, group) || !fileSystem.hasPermission(node, "execute", user, group)) {
+            if (!FileSystem.hasPermission(node, "read", user, group) || !FileSystem.hasPermission(node, "execute", user, group)) {
                 return { output: `Error: Permission denied to access '${path}'.`, statusCode: 1 };
             }
 

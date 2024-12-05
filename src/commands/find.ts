@@ -1,4 +1,5 @@
 import {CommandArgs, CommandContext, CommandFn, group, user} from "../core/TerminalCore";
+import {FileSystem} from "../core/filesystem";
 
 export const find: CommandFn = {
     description: "Searches for files and directories",
@@ -26,7 +27,7 @@ export const find: CommandFn = {
                 return { output: `Error: '${searchPath}' is not a directory.`, statusCode: 1 };
             }
 
-            if (!fileSystem.hasPermission(node, "read", user, group) || !fileSystem.hasPermission(node, "execute", user, group)) {
+            if (!FileSystem.hasPermission(node, "read", user, group) || !FileSystem.hasPermission(node, "execute", user, group)) {
                 return { output: `Error: Permission denied to access '${searchPath}'.`, statusCode: 1 };
             }
 

@@ -1,4 +1,5 @@
 import {CommandArgs, CommandContext, CommandFn, user, group} from "../core/TerminalCore";
+import {FileSystem} from "../core/filesystem";
 
 export const grep: CommandFn = {
     description: "Searches for a pattern in a file",
@@ -27,7 +28,7 @@ export const grep: CommandFn = {
             }
 
             // Check read permissions
-            if (!fileSystem.hasPermission(file, "read", user, group)) {
+            if (!FileSystem.hasPermission(file, "read", user, group)) {
                 return { output: `Error: Permission denied to read '${filename}'.`, statusCode: 1 };
             }
 

@@ -1,4 +1,5 @@
 import {CommandArgs, CommandContext, CommandFn, group, user} from "../core/TerminalCore";
+import {FileSystem} from "../core/filesystem";
 
 export const rm: CommandFn = {
     description: "Removes files or directories",
@@ -21,7 +22,7 @@ export const rm: CommandFn = {
             }
 
             // Check if the user has write permission to remove the target node
-            if (!fileSystem.hasPermission(targetNode, "write", user, group)) {
+            if (!FileSystem.hasPermission(targetNode, "write", user, group)) {
                 return { output: `Error: Permission denied to remove '${target}'.`, statusCode: 1 };
             }
 

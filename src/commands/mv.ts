@@ -1,4 +1,5 @@
 import {CommandArgs, CommandContext, CommandFn, group, user} from "../core/TerminalCore";
+import {FileSystem} from "../core/filesystem";
 
 export const mv: CommandFn = {
     description: "Moves or renames a file or directory",
@@ -25,7 +26,7 @@ export const mv: CommandFn = {
             }
 
             // Ensure the user has permission to remove the source node
-            if (!fileSystem.hasPermission(sourceNode, "write", user, group)) {
+            if (!FileSystem.hasPermission(sourceNode, "write", user, group)) {
                 return { output: `Error: Permission denied to move '${source}'.`, statusCode: 1 };
             }
 
@@ -34,7 +35,7 @@ export const mv: CommandFn = {
             if (!destinationParent || destinationParent.type !== "directory") {
                 return { output: `Error: Destination directory '${destinationDir}' not found.`, statusCode: 1 };
             }
-            if (!fileSystem.hasPermission(destinationParent, "write", user, group)) {
+            if (!FileSystem.hasPermission(destinationParent, "write", user, group)) {
                 return { output: `Error: Permission denied to write in '${destinationDir}'.`, statusCode: 1 };
             }
 

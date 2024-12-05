@@ -1,4 +1,5 @@
 import {CommandArgs, CommandContext, CommandFn, group, user} from "../core/TerminalCore";
+import {FileSystem} from "../core/filesystem";
 
 export const wc: CommandFn = {
     description: "Counts lines, words, and characters in a file",
@@ -23,7 +24,7 @@ export const wc: CommandFn = {
             }
 
             // Check read permissions
-            if (!fileSystem.hasPermission(file, "read", user, group)) {
+            if (!FileSystem.hasPermission(file, "read", user, group)) {
                 return { output: `Error: Permission denied to read '${filePath}'.`, statusCode: 1 };
             }
 

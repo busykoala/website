@@ -1,4 +1,5 @@
 import {CommandArgs, CommandContext, CommandFn, group, user} from "../core/TerminalCore";
+import {FileSystem} from "../core/filesystem";
 
 export const tail: CommandFn = {
     description: "Displays the last few lines of a file",
@@ -25,7 +26,7 @@ export const tail: CommandFn = {
             }
 
             // Check read permissions
-            if (!fileSystem.hasPermission(fileNode, "read", user, group)) {
+            if (!FileSystem.hasPermission(fileNode, "read", user, group)) {
                 return { output: `Error: Permission denied to read '${filename}'.`, statusCode: 1 };
             }
 

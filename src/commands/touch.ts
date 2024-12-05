@@ -1,4 +1,5 @@
 import {CommandArgs, CommandContext, CommandFn, group, user} from "../core/TerminalCore";
+import {FileSystem} from "../core/filesystem";
 
 export const touch: CommandFn = {
     description: "Creates an empty file or updates the timestamp of an existing file",
@@ -21,7 +22,7 @@ export const touch: CommandFn = {
                 }
 
                 // Check write permissions to update the file's timestamp
-                if (!fileSystem.hasPermission(file, "write", user, group)) {
+                if (!FileSystem.hasPermission(file, "write", user, group)) {
                     return { output: `Error: Permission denied to update '${filename}'.`, statusCode: 1 };
                 }
 
@@ -36,7 +37,7 @@ export const touch: CommandFn = {
                     return { output: `Error: Parent directory '${parentPath}' not found.`, statusCode: 1 };
                 }
 
-                if (!fileSystem.hasPermission(parentDir, "write", user, group)) {
+                if (!FileSystem.hasPermission(parentDir, "write", user, group)) {
                     return { output: `Error: Permission denied to create '${filename}'.`, statusCode: 1 };
                 }
 

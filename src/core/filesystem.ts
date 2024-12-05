@@ -45,7 +45,7 @@ export class FileSystem {
     }
 
     // Check permissions for a node
-    public hasPermission(
+    public static hasPermission(
         node: FileSystemNode,
         operation: "read" | "write" | "execute",
         user: string,
@@ -84,7 +84,7 @@ export class FileSystem {
             throw new Error(`Parent directory '${path}' not found.`);
         }
 
-        if (!bypassPermissions && !this.hasPermission(parent, "write", user, group)) {
+        if (!bypassPermissions && !FileSystem.hasPermission(parent, "write", user, group)) {
             throw new Error(`Permission denied: Cannot create directory in '${path}'.`);
         }
 
@@ -121,7 +121,7 @@ export class FileSystem {
             throw new Error(`Parent directory '${path}' not found.`);
         }
 
-        if (!bypassPermissions && !this.hasPermission(parent, "write", user, group)) {
+        if (!bypassPermissions && !FileSystem.hasPermission(parent, "write", user, group)) {
             throw new Error(`Permission denied: Cannot create file in '${path}'.`);
         }
 
@@ -129,7 +129,7 @@ export class FileSystem {
 
         const existingFile = parent.children[name];
         if (existingFile && existingFile.type === "file") {
-            if (!bypassPermissions && !this.hasPermission(existingFile, "write", user, group)) {
+            if (!bypassPermissions && !FileSystem.hasPermission(existingFile, "write", user, group)) {
                 throw new Error(`Permission denied: Cannot write to file '${name}'.`);
             }
 
@@ -157,14 +157,14 @@ export class FileSystem {
     }
 
     // Get a node with permission checks
-    public getNode(path: string, user: string, group: string): FileSystemNode | null {
+    public getNode(path: string, user: string, group: string, permission: 'read' | 'write' | 'execute' = 'execute'): FileSystemNode | null {
         const normalizedPath = this.normalizePath(path);
         const segments = normalizedPath.split("/").filter((segment) => segment);
         let currentNode: FileSystemNode | null = this.root;
 
         for (const segment of segments) {
             if (!currentNode || currentNode.type !== "directory") return null;
-            if (!this.hasPermission(currentNode, "execute", user, group)) {
+            if (!FileSystem.hasPermission(currentNode, permission, user, group)) {
                 throw new Error(`Permission denied: Cannot access '${path}'.`);
             }
 
@@ -187,7 +187,7 @@ export class FileSystem {
             throw new Error(`Directory '${path}' not found.`);
         }
 
-        if (!this.hasPermission(dir, "read", user, group)) {
+        if (!FileSystem.hasPermission(dir, "read", user, group)) {
             throw new Error(`Permission denied: Cannot list directory '${path}'.`);
         }
 
@@ -212,7 +212,7 @@ export class FileSystem {
             throw new Error(`Cannot remove '${path}': Node not found.`);
         }
 
-        if (!this.hasPermission(node, "write", user, group)) {
+        if (!FileSystem.hasPermission(node, "write", user, group)) {
             throw new Error(`Permission denied: Cannot remove '${path}'.`);
         }
 
@@ -260,7 +260,7 @@ export class FileSystem {
         }
 
         // Check permissions for the directory
-        if (!this.hasPermission(node, "read", user, group) || !this.hasPermission(node, "execute", user, group)) {
+        if (!FileSystem.hasPermission(node, "read", user, group) || !FileSystem.hasPermission(node, "execute", user, group)) {
             throw new Error(`Permission denied to search in '${path}'.`);
         }
 
@@ -291,7 +291,7 @@ export class FileSystem {
         }
 
         // Check permissions for the node
-        if (!this.hasPermission(node, "read", user, group)) {
+        if (!FileSystem.hasPermission(node, "read", user, group)) {
             throw new Error(`Permission denied: Cannot access '${path}'.`);
         }
 
