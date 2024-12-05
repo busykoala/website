@@ -3,12 +3,12 @@ import { InitFileSystemNode } from "../addBaseFilesystem";
 export const busykoalaFiles: InitFileSystemNode[] = [
     {
         type: "file",
-        directory: "/home/busykoala",
+        directory: "/home/busykoala/about",
         name: "education.txt",
         permissions: "rw-r--r--",
         owner: "busykoala",
         group: "busygroup",
-        size: 123, // Placeholder size
+        size: 123,
         modified: new Date(),
         content: `<br>
       ZHAW, 2020-2024 (computer science)<br>
@@ -18,12 +18,12 @@ export const busykoalaFiles: InitFileSystemNode[] = [
     },
     {
         type: "file",
-        directory: "/home/busykoala",
+        directory: "/home/busykoala/about",
         name: "experience.md",
         permissions: "rw-r--r--",
         owner: "busykoala",
         group: "busygroup",
-        size: 456, // Placeholder size
+        size: 456,
         modified: new Date(),
         content: `<br>
       # Employments<br>
@@ -37,12 +37,12 @@ export const busykoalaFiles: InitFileSystemNode[] = [
     },
     {
         type: "file",
-        directory: "/home/busykoala",
+        directory: "/home/busykoala/about",
         name: "skillz.md",
         permissions: "rw-r--r--",
         owner: "busykoala",
         group: "busygroup",
-        size: 789, // Placeholder size
+        size: 789,
         modified: new Date(),
         content: `<br>
       # Skillz<br>
@@ -57,12 +57,12 @@ export const busykoalaFiles: InitFileSystemNode[] = [
     },
     {
         type: "file",
-        directory: "/home/busykoala",
+        directory: "/home/busykoala/about",
         name: "languages.md",
         permissions: "rw-r--r--",
         owner: "busykoala",
         group: "busygroup",
-        size: 234, // Placeholder size
+        size: 234,
         modified: new Date(),
         content: `<br>
       # My Languages<br>
@@ -77,7 +77,7 @@ export const busykoalaFiles: InitFileSystemNode[] = [
         permissions: "rw-r--r--",
         owner: "busykoala",
         group: "busygroup",
-        size: 345, // Placeholder size
+        size: 345,
         modified: new Date(),
         content: `<br>
       --> <a href="https://github.com/busykoala" target="_blank">Github</a><br>
@@ -86,6 +86,35 @@ export const busykoalaFiles: InitFileSystemNode[] = [
       --> <a href="mailto:info@busykoala.io?subject=Kontaktformular%20(busykoala.io)" target="_blank">Mail</a><br>
       --> <a href="https://keybase.io/busykoala" target="_blank">Keybase</a>
       `,
+    },
+    {
+        type: "file",
+        directory: "/home/busykoala/about",
+        name: "courses_and_certification.xml",
+        permissions: "rw-r--r--",
+        owner: "busykoala",
+        group: "busygroup",
+        size: 520,
+        modified: new Date(),
+        content: `
+&lt;certificationsAndCourses&gt;<br>
+    &nbsp;&nbsp;&lt;entry year="2024" type="Course"&gt;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;Certified Kubernetes Security Specialist (CKS)<br>
+    &nbsp;&nbsp;&lt;/entry&gt;<br>
+    &nbsp;&nbsp;&lt;entry year="2024" type="Certification"&gt;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;AWS Certified Solutions Architect - Associate (SAA-C03)<br>
+    &nbsp;&nbsp;&lt;/entry&gt;<br>
+    &nbsp;&nbsp;&lt;entry year="2024" type="Course"&gt;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;Clear and Simple NSX-T 3.0 (VCP-NV 2021 2V0-41.20)<br>
+    &nbsp;&nbsp;&lt;/entry&gt;<br>
+    &nbsp;&nbsp;&lt;entry year="2024" type="Course"&gt;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;Certified Kubernetes Administrator (CKA) with Practice Tests<br>
+    &nbsp;&nbsp;&lt;/entry&gt;<br>
+    &nbsp;&nbsp;&lt;entry year="2023" type="Course"&gt;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;Complete VMWare vSphere ESXi and vCenter Administration<br>
+    &nbsp;&nbsp;&lt;/entry&gt;<br>
+&lt;/certificationsAndCourses&gt;<br>
+    `
     },
     {
         type: "file",

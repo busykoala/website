@@ -90,6 +90,17 @@ export class FileSystem {
 
         if (!parent.children) parent.children = {};
 
+        // Check if the directory already exists
+        if (parent.children[name]) {
+            if (parent.children[name].type === "directory") {
+                // Directory already exists, skip creation
+                return;
+            } else {
+                throw new Error(`A directory with the name '${name}' already exists in '${path}'.`);
+            }
+        }
+
+        // Create the directory if it does not exist
         parent.children[name] = {
             type: "directory",
             name,

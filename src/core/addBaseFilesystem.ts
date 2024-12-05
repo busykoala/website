@@ -21,6 +21,7 @@ export function addBaseFilesystem(fileSystem: FileSystem) {
         { path: "/var/log", owner: "root", group: "root" },
         { path: "/home", owner: "root", group: "root" },
         { path: "/home/busykoala", owner: user, group },
+        { path: "/home/busykoala/about", owner: user, group },
         { path: "/home/busykoala/.ssh", owner: user, group },
     ];
 
