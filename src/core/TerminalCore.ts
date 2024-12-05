@@ -151,9 +151,63 @@ export class TerminalCore {
     }
 
     tabComplete(input: string): string {
-        const [commandName] = input.split(" ");
-        const matches = Object.keys(this.commands).filter((cmd) => cmd.startsWith(commandName));
-        return matches.length === 1 ? matches[0] : input;
+        const [partialCommand, ...rest] = input.split(" ");
+        const currentPath = this.context.env.PWD;
+
+        // Step 1: Check if input is a command or a path
+        const isPathCompletion = partialCommand.startsWith("./") || partialCommand.startsWith("/") || rest.length > 0;
+
+        if (isPathCompletion) {
+            // Handle path-based completion
+            let pathToComplete = rest.length > 0 ? rest[rest.length - 1] : partialCommand;
+            let basePath = currentPath;
+
+            // Separate base path from file/directory name
+            const lastSlashIndex = pathToComplete.lastIndexOf("/");
+            if (lastSlashIndex !== -1) {
+                basePath = this.fileSystem.normalizePath(`${currentPath}/${pathToComplete.slice(0, lastSlashIndex)}`);
+                pathToComplete = pathToComplete.slice(lastSlashIndex + 1);
+            }
+
+            try {
+                // List contents of the base path
+                const directoryContents = this.fileSystem.listDirectory(basePath, this.context.env.USER, group);
+                const matches = directoryContents
+                    .map((node) => node.name)
+                    .filter((name) => name.startsWith(pathToComplete));
+
+                if (matches.length === 1) {
+                    // Single match: complete the file/directory name
+                    const completion = matches[0];
+                    const completedPath = lastSlashIndex !== -1
+                        ? `${pathToComplete.slice(0, lastSlashIndex + 1)}${completion}`
+                        : completion;
+                    return rest.length > 0
+                        ? `${partialCommand} ${rest.slice(0, -1).join(" ")} ${completedPath}`
+                        : completedPath;
+                } else if (matches.length > 1) {
+                    // Multiple matches: return the input (can display matches in the terminal if needed)
+                    return input;
+                }
+            } catch {
+                // If the base path is invalid, return the input unchanged
+                return input;
+            }
+        } else {
+            // Handle command-based completion
+            const commandMatches = Object.keys(this.commands).filter((cmd) => cmd.startsWith(partialCommand));
+
+            if (commandMatches.length === 1) {
+                // Single command match
+                return commandMatches[0];
+            } else if (commandMatches.length > 1) {
+                // Multiple matches: return input (or display options in terminal)
+                return input;
+            }
+        }
+
+        // No matches
+        return input;
     }
 
     getContext(): CommandContext {
