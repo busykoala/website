@@ -1,0 +1,9 @@
+# Ignore build artifacts and deps
+node_modules/
+dist/
+coverage/
+.yarn/
+
+# Caches
+.vite/
+

@@ -1,37 +1,49 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>busykoala.io</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div id="desktop">
-  <div id="history">
-    &nbsp;&nbsp;&nbsp;&lowbar;&lowbar;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lowbar;&lowbar;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lowbar;&lowbar;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lowbar;<br>
-    &nbsp;&nbsp;&sol;&nbsp;&sol;&nbsp;&nbsp;&lowbar;&lowbar;&nbsp;&lowbar;&lowbar;&lowbar;&lowbar;&lowbar;&nbsp;&lowbar;&lowbar;&nbsp;&lowbar;&lowbar;&sol;&nbsp;&sol;&lowbar;&lowbar;&lowbar;&lowbar;&lowbar;&nbsp;&nbsp;&lowbar;&lowbar;&lowbar;&nbsp;&lowbar;&sol;&nbsp;&sol;&lowbar;&lowbar;&nbsp;&lowbar;&nbsp;&nbsp;&lpar;&lowbar;&rpar;&lowbar;&lowbar;<br>
-    &nbsp;&sol;&nbsp;&lowbar;&nbsp;&bsol;&sol;&nbsp;&sol;&sol;&nbsp;&lpar;&lowbar;&#x2d;&lt;&sol;&nbsp;&sol;&sol;&nbsp;&sol;&nbsp;&nbsp;&apos;&lowbar;&sol;&nbsp;&lowbar;&nbsp;&bsol;&sol;&nbsp;&lowbar;&nbsp;&grave;&sol;&nbsp;&sol;&nbsp;&lowbar;&nbsp;&grave;&sol;&nbsp;&sol;&nbsp;&sol;&nbsp;&lowbar;&nbsp;&bsol;<br>
-    &sol;&lowbar;&period;&lowbar;&lowbar;&sol;&bsol;&lowbar;&comma;&lowbar;&sol;&lowbar;&lowbar;&lowbar;&sol;&bsol;&lowbar;&comma;&nbsp;&sol;&lowbar;&sol;&bsol;&lowbar;&bsol;&bsol;&lowbar;&lowbar;&lowbar;&sol;&bsol;&lowbar;&comma;&lowbar;&sol;&lowbar;&sol;&bsol;&lowbar;&comma;&lowbar;&lpar;&lowbar;&rpar;&lowbar;&sol;&bsol;&lowbar;&lowbar;&lowbar;&sol;<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sol;&lowbar;&lowbar;&lowbar;&sol;<br>
-    Welcome to busykoala.io!<br>
-    Type 'help' to get started.<br><br>
-  </div>
-  <div id="current">
-    <div id="prompt">
-      <span style="color:cornflowerblue;">website</span><span>@</span>
-      <span style="color:aqua;">busykoala</span>:<span style="color:lawngreen;" class="pwd">/home/busykoala</span>$&nbsp;
-      <input type="text" id="input" autofocus>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>busykoala.io</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" />
+    <link rel="stylesheet" href="/terminal-theme.css" />
+  </head>
+  <body>
+    <!-- Fixed sci-fi background -->
+    <div id="terminal-background"></div>
+
+    <!-- Main terminal container -->
+    <div id="terminal-container">
+      <div id="terminal-screen">
+        <div id="terminal-output"></div>
+
+        <!-- ORIGINAL PROMPT HTML (unchanged) -->
+        <div id="terminal-prompt">
+          <span class="prompt-user">speedy@busykoala-2</span>
+          <span class="prompt-separator"> </span>
+          <span class="prompt-path">~</span>
+          <span class="prompt-symbol">❯</span>
+          <input type="text" id="terminal-input" autofocus autocomplete="off" spellcheck="false" />
+        </div>
+      </div>
+
+      <!-- tmux-style status bar -->
+      <div id="terminal-statusbar">
+        <div class="statusbar-left">
+          <span class="statusbar-session">@busyhost</span>
+          <span class="statusbar-window">1:zsh</span>
+        </div>
+        <div class="statusbar-right">
+          <span class="statusbar-time"></span>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-<div id="mobile">
-  <h1>busykoala.io</h1>
-  <p>Please use a desktop computer for the best experience.</p>
-</div>
 
-<!-- Matrix Animation (Overlay) -->
-<div id="matrix-animation"></div>
+    <!-- Mobile fallback -->
+    <div id="mobile">
+      <h1>busykoala.io</h1>
+      <p>Please use a desktop computer for the best experience.</p>
+    </div>
 
-<script src="dist/shell-bundle.js"></script>
-</body>
+    <script type="module" src="/src/index.ts"></script>
+  </body>
 </html>

@@ -1,0 +1,242 @@
+/* ==========================================================================
+   busykoala.io — Clean & Stable Powerline Prompt
+   - History and live prompts render identically
+   - No animations
+   - Input never overlaps the prompt
+   - Arrows disabled in history to avoid shape drift
+   ========================================================================== */
+
+:root {
+  --bg-primary: #0a0e1a;
+  --text-primary: #e6edf3;
+  --text-secondary: #8aa0b5;
+
+  --accent-blue: rgba(5, 218, 246, 0.59);
+  --accent-purple: rgba(183, 152, 252, 0.53);
+  --accent-green: #00ffaa;
+  --accent-cyan: #4fd6be;
+
+  --statusbar-bg: #121c2e;
+  --statusbar-fg: #b8c7dc;
+
+  /* Prompt geometry */
+  --seg-h: 22px; /* segment height */
+  --seg-r: 6px; /* end radius */
+  --arrow-w: 12px; /* connector width */
+}
+
+/* Base --------------------------------------------------------------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: 'Fira Code', monospace;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow: hidden;
+}
+
+/* Background --------------------------------------------------------- */
+#terminal-background {
+  position: fixed;
+  inset: 0;
+  background: url('./cyberpunk.png') center/cover no-repeat fixed;
+  filter: brightness(0.78) contrast(1.05);
+  z-index: -1;
+}
+
+/* Layout ------------------------------------------------------------- */
+#terminal-container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+#terminal-screen {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 22px;
+}
+
+/* ==========================================================================
+   POWERLINE PROMPT (blue ▶ purple ▶ bg)
+   ========================================================================== */
+
+#terminal-prompt {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 4px 0 4px;
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* hide the original “space” span */
+.prompt-separator {
+  display: none;
+}
+
+/* Blue segment: user@host */
+.prompt-user {
+  display: flex;
+  align-items: center;
+  height: var(--seg-h);
+  padding: 0 14px;
+  background: var(--accent-blue);
+  color: #061018;
+  font-weight: 600;
+  border-radius: var(--seg-r) 0 0 var(--seg-r);
+  position: relative;
+}
+
+/* Purple segment: path (~) */
+.prompt-path {
+  display: flex;
+  align-items: center;
+  height: var(--seg-h);
+  padding: 0 14px;
+  background: var(--accent-purple);
+  color: #fff;
+  font-weight: 600;
+  border-radius: 0 var(--seg-r) var(--seg-r) 0;
+  position: relative;
+}
+.prompt-path::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: calc(-1 * var(--arrow-w));
+  border-top: calc(var(--seg-h) / 2) solid transparent;
+  border-bottom: calc(var(--seg-h) / 2) solid transparent;
+  border-left: var(--arrow-w) solid var(--bg-primary);
+}
+
+/* Green chevron (no animation) */
+.prompt-symbol {
+  margin-left: 8px; /* consistent spacing before command/input */
+  color: var(--accent-green);
+  font-weight: 700;
+}
+
+/* Input — never overlaps the prompt */
+#terminal-input {
+  flex: 1;
+  min-width: 220px;
+  margin-left: 8px; /* spacing after chevron */
+  height: var(--seg-h);
+  line-height: var(--seg-h);
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-family: 'Fira Code', monospace;
+  caret-color: var(--accent-green);
+}
+
+/* ==========================================================================
+   Output / History
+   ========================================================================== */
+
+#terminal-output {
+  font-size: 15px;
+  line-height: 1.34;
+}
+
+/* History row: keep spacing tight and predictable */
+.history-command {
+  display: flex;
+  align-items: center;
+  gap: 0; /* same visual spacing as live prompt */
+  margin: 4px 0 4px;
+}
+
+/* 🔒 Make history look exactly like live by removing connector arrows.
+   (Without a following segment, the powerline arrows cause drift.) */
+.history-command .prompt-user::after,
+.history-command .prompt-path::after {
+  display: none !important;
+}
+
+/* Match chevron spacing in history too */
+.history-command .prompt-symbol {
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+.output-line {
+  margin: 0;
+}
+.output-success {
+  color: var(--accent-green);
+}
+.output-error {
+  color: #ff6ac1;
+}
+.output-info {
+  color: #4fd6be;
+}
+#terminal-output a {
+  color: #7bdcff;
+  text-decoration: none;
+}
+#terminal-output a:hover {
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   Status bar (tmux-style)
+   ========================================================================== */
+
+#terminal-statusbar {
+  background: var(--statusbar-bg);
+  color: var(--statusbar-fg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 12px;
+  font-size: 13px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+.statusbar-left {
+  display: flex;
+  gap: 10px;
+}
+.statusbar-session {
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+.statusbar-window {
+  background: var(--accent-blue);
+  color: #061018;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* Scrollbar ---------------------------------------------------------- */
+#terminal-screen::-webkit-scrollbar {
+  width: 8px;
+}
+#terminal-screen::-webkit-scrollbar-thumb {
+  background: rgba(130, 170, 255, 0.25);
+  border-radius: 4px;
+}
+
+/* Mobile ------------------------------------------------------------- */
+#mobile {
+  display: none;
+  text-align: center;
+  padding: 40px 20px;
+}
+@media (max-width: 768px) {
+  #terminal-container {
+    display: none;
+  }
+  #mobile {
+    display: block;
+    color: var(--text-primary);
+  }
+}

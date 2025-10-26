@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+# Husky pre-commit hook
+
+# Exit on error
+set -e
+
+# Ensure Yarn is available
+if ! command -v yarn >/dev/null 2>&1; then
+  echo "Yarn is required for Git hooks" >&2
+  exit 1
+fi
+
+# Lint and run tests before committing
+yarn lint
+yarn format:check
+yarn test:run
+
