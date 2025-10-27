@@ -37,7 +37,7 @@ export default [
 
   // Project rules for TS/JS (apply only to source files)
   {
-    files: ['src/**/*.{ts,tsx,js,jsx}'],
+    files: ['src/**/*.{ts,tsx,js,jsx}', 'e2e/**/*.{ts,tsx}'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -80,8 +80,8 @@ export default [
     },
   },
 
-  // Test files: provide Vitest globals
+  // Test files: provide Vitest globals and Playwright globals
   {
-    files: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'src/__tests__/**/*.ts'],
+    files: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'src/__tests__/**/*.ts', 'e2e/**/*.spec.ts'],
   },
 ];

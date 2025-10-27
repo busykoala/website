@@ -7,6 +7,10 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
     "lint": "eslint --ext .ts,.tsx,.js,.jsx --max-warnings=0 .",
     "lint:fix": "eslint --ext .ts,.tsx,.js,.jsx --fix .",
     "format": "prettier --write .",
@@ -14,6 +18,7 @@
     "postinstall": "husky"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
     "@vitejs/plugin-legacy": "^7.2.1",
