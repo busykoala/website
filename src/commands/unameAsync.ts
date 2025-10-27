@@ -2,22 +2,15 @@ import { CommandContext } from '../core/TerminalCore';
 import { IOStreams } from '../core/streams';
 import { parseSimpleFlags } from '../utils/flagParser';
 import { ExitCode } from '../utils/errorMessages';
+import { handleCommonFlags } from '../utils/commandHelpers';
 
 export async function unameAsync(
   args: string[],
   context: CommandContext,
   io: IOStreams,
 ): Promise<number> {
-  // Help/version
-  const parsed = parseSimpleFlags(args);
-  if (parsed.flags.has('h') || parsed.longFlags.has('help')) {
-    io.stdout.write(unameAsyncCommand.usage || unameAsyncCommand.description || 'uname');
-    return ExitCode.SUCCESS;
-  }
-  if (parsed.longFlags.has('version')) {
-    io.stdout.write('uname (GNU coreutils simulation) 1.0.0\n');
-    return ExitCode.SUCCESS;
-  }
+  const exitCode = handleCommonFlags(args, io, 'uname', unameAsyncCommand.usage || 'uname');
+  if (exitCode !== null) return exitCode;
 
   const info = {
     sysname: 'BusykoalaOS',
@@ -30,10 +23,8 @@ export async function unameAsync(
     operatingSystem: 'BusykoalaOS',
   } as const;
 
-  // Selection flags (combined like -sn)
+  const parsed = parseSimpleFlags(args);
   const flags = parsed.flags;
-
-  // If -a present, include all standard fields in order
   const showAll = flags.has('a');
 
   // Default is -s if no specific selection flags provided
