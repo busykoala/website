@@ -155,11 +155,13 @@ async function initTerminal() {
       const completed = shell.tabComplete(input);
       renderer.setInputValue(completed);
     } else if (e.ctrlKey && e.key.toLowerCase() === 'l') {
+      // Clear terminal and redraw prompt (like real shell)
       e.preventDefault();
       shell.clear();
       renderer.updatePrompt(context.env.PWD, context.env.HOME);
       renderer.focusInput();
     } else if (e.ctrlKey && e.key.toLowerCase() === 'r') {
+      // Enter reverse i-search mode
       e.preventDefault();
       shell.startReverseSearch();
     } else if (e.ctrlKey && e.key.toLowerCase() === 'c') {
