@@ -97,41 +97,46 @@ async function initTerminal() {
   updateTime();
   setInterval(updateTime, 1000);
 
-  // Event handlers
-  inputElement.addEventListener('keydown', async (e) => {
-    // Clear tab suggestions on any key except Tab so they don't linger
-    if (e.key !== 'Tab') {
-      renderer.clearCompletions?.();
+  // Keyboard event handlers
+  const handleReverseSearchKey = async (e: KeyboardEvent): Promise<boolean> => {
+    if (!shell.isReverseSearchActive()) return false;
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      shell.abortReverseSearch();
+      return true;
     }
 
-    // Handle reverse search mode
-    if (shell.isReverseSearchActive()) {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        shell.abortReverseSearch();
-        return;
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        shell.acceptReverseSearch();
-        // Execute the command that's currently in the input
-        const input = renderer.getInputValue();
-        if (input.trim()) await shell.executeCommand(input);
-        return;
-      } else if (e.ctrlKey && e.key.toLowerCase() === 'r') {
-        e.preventDefault();
-        shell.nextReverseSearch();
-        return;
-      } else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        e.preventDefault();
-        shell.typeReverseSearchChar(e.key);
-        return;
-      } else if (e.key === 'Backspace') {
-        e.preventDefault();
-        shell.backspaceReverseSearch();
-        return;
-      }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      shell.acceptReverseSearch();
+      const input = renderer.getInputValue();
+      if (input.trim()) await shell.executeCommand(input);
+      return true;
     }
 
+    if (e.ctrlKey && e.key.toLowerCase() === 'r') {
+      e.preventDefault();
+      shell.nextReverseSearch();
+      return true;
+    }
+
+    if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      e.preventDefault();
+      shell.typeReverseSearchChar(e.key);
+      return true;
+    }
+
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      shell.backspaceReverseSearch();
+      return true;
+    }
+
+    return false;
+  };
+
+  const handleNormalKey = async (e: KeyboardEvent): Promise<void> => {
     if (e.key === 'Enter') {
       e.preventDefault();
       const input = renderer.getInputValue();
@@ -151,19 +156,30 @@ async function initTerminal() {
       renderer.setInputValue(completed);
     } else if (e.ctrlKey && e.key.toLowerCase() === 'l') {
       e.preventDefault();
-      // Clear the terminal like a real shell and redraw prompt
-      // Use shell.clear() so any Shell-level state that needs resetting is handled.
       shell.clear();
       renderer.updatePrompt(context.env.PWD, context.env.HOME);
       renderer.focusInput();
     } else if (e.ctrlKey && e.key.toLowerCase() === 'r') {
       e.preventDefault();
-      // Enter reverse search mode
       shell.startReverseSearch();
     } else if (e.ctrlKey && e.key.toLowerCase() === 'c') {
       e.preventDefault();
       shell.cancelCurrentExecution();
     }
+  };
+
+  inputElement.addEventListener('keydown', async (e) => {
+    // Clear tab suggestions on any key except Tab
+    if (e.key !== 'Tab') {
+      renderer.clearCompletions?.();
+    }
+
+    // Handle reverse search mode first
+    const wasHandled = await handleReverseSearchKey(e);
+    if (wasHandled) return;
+
+    // Handle normal mode keys
+    await handleNormalKey(e);
   });
 
   // Click anywhere to focus input
