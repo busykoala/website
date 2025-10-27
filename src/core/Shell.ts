@@ -7,6 +7,9 @@ import { CommandResolver, AsyncCommand } from './CommandResolver';
 import { InterpreterRegistry } from './InterpreterRegistry';
 import { builtinsSet } from './data/binFiles';
 import { user, group } from './TerminalCore';
+import { tokenize, hasUnquotedGlob, stripOuterQuotes } from '../utils/tokenizer';
+import { expandToken } from '../utils/variableExpansion';
+import { expandGlobs } from '../utils/globExpansion';
 
 export type AsyncCommandFn = (
   args: string[],
@@ -193,12 +196,20 @@ export class Shell {
           // Expand variables and globs; then strip outer quotes
           const expanded: string[] = [];
           for (const t of rawTokens) {
-            const exp = this.expandToken(t, this.context.env as any);
-            const globs = this.hasUnquotedGlob(t) ? this.expandGlobs(exp) : [exp];
+            const exp = expandToken(t, this.context.env as any);
+            const globs = hasUnquotedGlob(t)
+              ? expandGlobs(
+                  exp,
+                  this.context.terminal.getFileSystem(),
+                  this.context.env.PWD,
+                  this.context.env.USER,
+                  'busygroup',
+                )
+              : [exp];
             expanded.push(...globs);
           }
-          commandName = this.stripOuterQuotes(expanded[0] ?? '');
-          commandArgs = expanded.slice(1).map((a) => this.stripOuterQuotes(a));
+          commandName = stripOuterQuotes(expanded[0] ?? '');
+          commandArgs = expanded.slice(1).map((a) => stripOuterQuotes(a));
         }
 
         if (previousOutput) {
@@ -571,282 +582,20 @@ export class Shell {
   }
 
   private parseCommand(input: string): string[] {
-    return this.tokenize(input).tokens;
+    return tokenize(input).tokens;
   }
 
   private tokenizeWithHereString(input: string): { tokens: string[]; hereString: string | null } {
-    const { tokens, ops } = this.tokenize(input, true);
+    const { tokens, ops } = tokenize(input, true);
     let here: string | null = null;
     if (ops) {
       for (const op of ops) {
         if (op.type === 'hereString' && here == null) {
-          here = this.expandToken(op.value, this.context.env as any);
+          here = expandToken(op.value, this.context.env as any);
         }
       }
     }
     return { tokens, hereString: here };
-  }
-
-  private hasUnquotedGlob(original: string): boolean {
-    let inSingle = false,
-      inDouble = false;
-    for (let i = 0; i < original.length; i++) {
-      const ch = original[i];
-      if (!inDouble && ch === "'") {
-        inSingle = !inSingle;
-        continue;
-      }
-      if (!inSingle && ch === '"') {
-        inDouble = !inDouble;
-        continue;
-      }
-      if (!inSingle && !inDouble && (ch === '*' || ch === '?')) return true;
-    }
-    return false;
-  }
-
-  private stripOuterQuotes(s: string): string {
-    if (s.length >= 2) {
-      if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
-        return s.slice(1, -1);
-      }
-    }
-    return s;
-  }
-
-  private expandToken(token: string, env: Record<string, any>): string {
-    let out = '';
-    let inSingle = false;
-    let inDouble = false;
-
-    const readVarName = (s: string, idx: number): { name: string; next: number } | null => {
-      if (s[idx] === '{') {
-        // ${VAR}
-        let j = idx + 1;
-        let name = '';
-        while (j < s.length && s[j] !== '}') {
-          name += s[j];
-          j++;
-        }
-        if (j < s.length && s[j] === '}') {
-          return { name, next: j + 1 };
-        }
-        return null;
-      } else if (s[idx] === '?') {
-        return { name: '?', next: idx + 1 };
-      } else {
-        let j = idx;
-        let name = '';
-        if (/[A-Za-z_]/.test(s[j])) {
-          name += s[j];
-          j++;
-          while (j < s.length && /[A-Za-z0-9_]/.test(s[j])) {
-            name += s[j];
-            j++;
-          }
-          return { name, next: j };
-        }
-        return null;
-      }
-    };
-
-    for (let i = 0; i < token.length; i++) {
-      const ch = token[i];
-      if (!inDouble && ch === "'") {
-        inSingle = !inSingle;
-        continue;
-      }
-      if (!inSingle && ch === '"') {
-        inDouble = !inDouble;
-        continue;
-      }
-
-      if (ch === '\\') {
-        // Escape behavior differs by context
-        if (inSingle) {
-          out += ch;
-          continue;
-        }
-        if (inDouble) {
-          const next = token[i + 1];
-          if (next === '"' || next === '\\' || next === '$') {
-            out += next ?? '';
-            i++;
-            continue;
-          }
-          out += ch;
-          continue;
-        }
-        if (i + 1 < token.length) {
-          out += token[i + 1];
-          i++;
-          continue;
-        }
-        continue;
-      }
-
-      if (ch === '$' && !inSingle) {
-        const res = readVarName(token, i + 1);
-        if (res) {
-          const val = env[res.name] ?? '';
-          out += String(val);
-          i = res.next - 1;
-          continue;
-        }
-      }
-
-      out += ch;
-    }
-    return out;
-  }
-
-  private expandGlobs(expandedToken: string): string[] {
-    // Only expand simple patterns on the last path segment (no glob in directory part)
-    const fs = this.context.terminal.getFileSystem();
-    const lastSlash = expandedToken.lastIndexOf('/');
-    const dirPart = lastSlash >= 0 ? expandedToken.slice(0, lastSlash + 1) : '';
-    const pattern = lastSlash >= 0 ? expandedToken.slice(lastSlash + 1) : expandedToken;
-
-    if (/[*?]/.test(dirPart)) return [expandedToken];
-
-    let baseDir: string;
-    if (dirPart.startsWith('/')) {
-      baseDir = fs.normalizePath(dirPart);
-    } else {
-      baseDir = fs.normalizePath(`${this.context.env.PWD}/${dirPart}`);
-    }
-
-    try {
-      const entries = fs.listDirectory(baseDir, this.context.env.USER, 'busygroup');
-      const re = new RegExp(
-        '^' +
-          pattern
-            .replace(/[.+^${}()|\[\]\\]/g, (r) => '\\' + r)
-            .replace(/\*/g, '.*')
-            .replace(/\?/g, '.') +
-          '$',
-      );
-      const matches = entries
-        .filter((e) => re.test(e.name))
-        .map((e) => (dirPart || '') + e.name)
-        .sort((a, b) => a.localeCompare(b));
-      return matches.length ? matches : [expandedToken];
-    } catch {
-      return [expandedToken];
-    }
-  }
-
-  // Robust tokenizer with quoting/escaping and here-string operator
-  private tokenize(
-    input: string,
-    withOperators: boolean = false,
-  ): { tokens: string[]; ops?: Array<{ type: 'hereString'; value: string }> } {
-    const tokens: string[] = [];
-    const ops: Array<{ type: 'hereString'; value: string }> = [];
-
-    let i = 0;
-    let cur = '';
-    let inSingle = false;
-    let inDouble = false;
-
-    const pushToken = () => {
-      if (cur.length > 0) {
-        tokens.push(cur);
-        cur = '';
-      }
-    };
-
-    const skipSpaces = () => {
-      while (i < input.length && /\s/.test(input[i]!)) i++;
-    };
-
-    const readWordRaw = (): string => {
-      let out = '';
-      let sInSingle = false;
-      let sInDouble = false;
-      while (i < input.length) {
-        const ch = input[i]!;
-        if (!sInDouble && ch === "'") {
-          out += ch;
-          sInSingle = !sInSingle;
-          i++;
-          continue;
-        }
-        if (!sInSingle && ch === '"') {
-          out += ch;
-          sInDouble = !sInDouble;
-          i++;
-          continue;
-        }
-        if (!sInSingle && !sInDouble && /\s/.test(ch)) break;
-        if (ch === '\\' && !sInSingle) {
-          if (i + 1 < input.length) {
-            out += ch + input[i + 1];
-            i += 2;
-            continue;
-          }
-        }
-        out += ch;
-        i++;
-      }
-      return out;
-    };
-
-    while (i < input.length) {
-      const ch = input[i]!;
-
-      // Here-string detection: unquoted <<< WORD
-      if (withOperators && !inSingle && !inDouble && input.startsWith('<<<', i)) {
-        pushToken();
-        i += 3;
-        skipSpaces();
-        const raw = readWordRaw();
-        if (raw.length === 0) {
-          cur += '<<<';
-          continue;
-        }
-        ops.push({ type: 'hereString', value: raw });
-        continue;
-      }
-
-      if (!inSingle && !inDouble && /\s/.test(ch)) {
-        pushToken();
-        i++;
-        while (i < input.length && /\s/.test(input[i]!)) i++;
-        continue;
-      }
-
-      if (!inDouble && ch === "'") {
-        inSingle = !inSingle;
-        cur += ch;
-        i++;
-        continue;
-      }
-      if (!inSingle && ch === '"') {
-        inDouble = !inDouble;
-        cur += ch;
-        i++;
-        continue;
-      }
-
-      if (ch === '\\' && !inSingle) {
-        if (i + 1 < input.length) {
-          cur += ch + input[i + 1];
-          i += 2;
-          continue;
-        }
-        cur += ch;
-        i++;
-        continue;
-      }
-
-      cur += ch;
-      i++;
-    }
-
-    pushToken();
-
-    return withOperators ? { tokens, ops } : { tokens };
   }
 
   private parseFlags(args: string[]): {
@@ -892,8 +641,8 @@ export class Shell {
 
   private redirectToFile(targetRaw: string, data: string, mode: 'write' | 'append'): void {
     // Expand env and strip outer quotes
-    const expanded = this.expandToken(targetRaw, this.context.env as any);
-    const target = this.stripOuterQuotes(expanded);
+    const expanded = expandToken(targetRaw, this.context.env as any);
+    const target = stripOuterQuotes(expanded);
 
     // Special device: /dev/null (ignore writes)
     const t = target.trim();
