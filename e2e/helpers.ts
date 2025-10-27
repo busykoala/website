@@ -27,9 +27,10 @@ export class TerminalHelper {
   /**
    * Get the terminal output element
    */
-  async getOutput() {
+  async getOutput(): Promise<string> {
     const outputElement = this.page.locator('#terminal-output');
-    return await outputElement.textContent();
+    const content = await outputElement.textContent();
+    return content ?? '';
   }
 
   /**
@@ -68,9 +69,10 @@ export class TerminalHelper {
   /**
    * Get the current working directory from the prompt
    */
-  async getCurrentDirectory() {
+  async getCurrentDirectory(): Promise<string> {
     const promptPath = this.page.locator('.prompt-path');
-    return await promptPath.textContent();
+    const content = await promptPath.textContent();
+    return content ?? '';
   }
 
   /**
