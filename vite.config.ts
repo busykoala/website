@@ -4,6 +4,10 @@ import prettier from 'vite-plugin-prettier';
 
 export default defineConfig({
   plugins: [eslint(), prettier()],
+  server: {
+    port: 5173,
+    strictPort: false,
+  },
   build: {
     outDir: 'dist',
     rollupOptions: {
