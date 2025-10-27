@@ -1,206 +1,187 @@
-import { TerminalCore, CommandFn } from "./core/TerminalCore";
-import { help } from "./commands/help";
-import { clear } from "./commands/clear";
-import { ls } from "./commands/ls";
-import { cat } from "./commands/cat";
-import { pwd } from "./commands/pwd";
-import { cd } from "./commands/cd";
-import { history } from "./commands/history";
-import { echo } from "./commands/echo";
-import { env } from "./commands/env";
-import { exportEnv } from "./commands/export";
-import { unsetEnv } from "./commands/unset";
-import { touch } from "./commands/touch";
-import { chmod } from "./commands/chmod";
-import { chown } from "./commands/chown";
-import { cp } from "./commands/cp";
-import { date } from "./commands/date";
-import { df } from "./commands/df";
-import { du } from "./commands/du";
-import { find } from "./commands/find";
-import { grep } from "./commands/grep";
-import { head } from "./commands/head";
-import { mkdir } from "./commands/mkdir";
-import { mv } from "./commands/mv";
-import { rm } from "./commands/rm";
-import { tail } from "./commands/tail";
-import { tree } from "./commands/tree";
-import { uname } from "./commands/uname";
-import { wc } from "./commands/wc";
-import { whoami } from "./commands/whoami";
-import { fortune } from "./commands/fortune";
-import { cowsay } from "./commands/cowsay";
-import { sl } from "./commands/sl";
-import { cmatrix } from "./commands/cmatrix";
-import {id} from "./commands/id";
+import { Shell } from './core/Shell';
+import { Renderer } from './core/Renderer';
+import { CommandContext } from './core/TerminalCore';
+import { FileSystem } from './core/filesystem';
+import { addBaseFilesystem } from './core/addBaseFilesystem';
+import { getWelcomeBanner } from './core/welcome';
+import { registerAllCommands } from './utils/commandRegistry';
 
-class TerminalState {
-  private static running = false;
-  private static interval: any;
+// Initialize on DOM ready
+async function initTerminal() {
+  // Check if mobile
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent,
+  );
 
-  static setRunning(value: boolean) {
-    this.running = value;
+  const terminalContainer = document.getElementById('terminal-container') as HTMLElement;
+  const mobileDiv = document.getElementById('mobile') as HTMLElement;
+
+  if (isMobile) {
+    terminalContainer.style.display = 'none';
+    mobileDiv.style.display = 'block';
+    return;
+  } else {
+    terminalContainer.style.display = 'flex';
+    mobileDiv.style.display = 'none';
   }
 
-  static getRunning(): boolean {
-    return this.running;
-  }
+  // Get DOM elements
+  const outputElement = document.getElementById('terminal-output') as HTMLElement;
+  const promptElement = document.getElementById('terminal-prompt') as HTMLElement;
+  const inputElement = document.getElementById('terminal-input') as HTMLInputElement;
 
-  static setInterval(value: any) {
-    this.interval = value;
-  }
+  // Initialize file system
+  const fileSystem = new FileSystem();
+  addBaseFilesystem(fileSystem);
 
-  static getInterval(): any {
-    return this.interval;
+  // Create a minimal TerminalCore for filesystem access
+  // Note: We'll migrate away from TerminalCore eventually, but keep it for now for compatibility
+  const terminalCore = {
+    getFileSystem: () => fileSystem,
+  };
+
+  // Create context
+  const context: CommandContext = {
+    env: {
+      PWD: '/home/busykoala',
+      HOME: '/home/busykoala',
+      EDITOR: 'nvim',
+      PATH: '/bin:/usr/local/bin:/usr/bin:/sbin',
+      SHELL: '/bin/zsh',
+      USER: 'busykoala',
+      COMMANDS: {},
+      LAST_EXIT_CODE: '0',
+    },
+    version: '2.0.0',
+    history: [],
+    files: {},
+    terminal: terminalCore as any,
+    shell: null as any, // Will be set after Shell creation
+  };
+
+  // Create renderer
+  const renderer = new Renderer({
+    outputElement,
+    promptElement,
+    inputElement,
+  });
+
+  // Create shell
+  const shell = new Shell({
+    renderer,
+    context,
+  });
+
+  // Store shell reference in context
+  context.shell = shell;
+
+  // Auto-discover and register all commands
+  await registerAllCommands(shell);
+
+  // Display welcome banner
+  renderer.writeHTML(getWelcomeBanner());
+
+  // Update status bar time
+  function updateTime() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('en-US', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    const timeElement = document.querySelector('.statusbar-time');
+    if (timeElement) {
+      (timeElement as HTMLElement).textContent = timeString;
+    }
   }
+  updateTime();
+  setInterval(updateTime, 1000);
+
+  // Event handlers
+  inputElement.addEventListener('keydown', async (e) => {
+    // Clear tab suggestions on any key except Tab so they don't linger
+    if (e.key !== 'Tab') {
+      renderer.clearCompletions?.();
+    }
+
+    // Handle reverse search mode
+    if (shell.isReverseSearchActive()) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        shell.abortReverseSearch();
+        return;
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        shell.acceptReverseSearch();
+        // Execute the command that's currently in the input
+        const input = renderer.getInputValue();
+        if (input.trim()) await shell.executeCommand(input);
+        return;
+      } else if (e.ctrlKey && e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        shell.nextReverseSearch();
+        return;
+      } else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        e.preventDefault();
+        shell.typeReverseSearchChar(e.key);
+        return;
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        shell.backspaceReverseSearch();
+        return;
+      }
+    }
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const input = renderer.getInputValue();
+      await shell.executeCommand(input);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const historyCommand = shell.navigateHistory('up');
+      renderer.setInputValue(historyCommand);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const historyCommand = shell.navigateHistory('down');
+      renderer.setInputValue(historyCommand);
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      const input = renderer.getInputValue();
+      const completed = shell.tabComplete(input);
+      renderer.setInputValue(completed);
+    } else if (e.ctrlKey && e.key.toLowerCase() === 'l') {
+      e.preventDefault();
+      // Clear the terminal like a real shell and redraw prompt
+      // Use shell.clear() so any Shell-level state that needs resetting is handled.
+      shell.clear();
+      renderer.updatePrompt(context.env.PWD, context.env.HOME);
+      renderer.focusInput();
+    } else if (e.ctrlKey && e.key.toLowerCase() === 'r') {
+      e.preventDefault();
+      // Enter reverse search mode
+      shell.startReverseSearch();
+    } else if (e.ctrlKey && e.key.toLowerCase() === 'c') {
+      e.preventDefault();
+      shell.cancelCurrentExecution();
+    }
+  });
+
+  // Click anywhere to focus input
+  document.addEventListener('click', (e) => {
+    if (e.target !== inputElement) {
+      renderer.focusInput();
+    }
+  });
+
+  // Initial focus
+  renderer.focusInput();
 }
 
-export const TerminalStateController = {
-  setRunning: TerminalState.setRunning,
-  getRunning: TerminalState.getRunning,
-  setInterval: TerminalState.setInterval,
-  getInterval: TerminalState.getInterval
-};
-
-// Initialize Terminal
-const terminal = new TerminalCore({
-  env: {
-    PWD: "/home/busykoala",
-    HOME: "/home/busykoala",
-    EDITOR: "nvim",
-    PATH: "/bin:/usr/local/bin:/usr/bin:/sbin",
-    SHELL: "/bin/busyshell",
-    USER: "busykoala",
-    COMMANDS: {},
-  },
-  version: "1.0.0",
-  history: [],
-  files: {},
-});
-
-// Commands
-const commands: Record<string, CommandFn> = {
-  cat,
-  cd,
-  chmod,
-  chown,
-  clear,
-  cmatrix,
-  cowsay,
-  cp,
-  date,
-  df,
-  du,
-  echo,
-  env,
-  export: exportEnv,
-  find,
-  fortune,
-  grep,
-  head,
-  help,
-  history,
-  id,
-  ls,
-  mkdir,
-  mv,
-  pwd,
-  rm,
-  sl,
-  tail,
-  touch,
-  tree,
-  uname,
-  unset: unsetEnv,
-  wc,
-  whoami,
-};
-
-// Register Commands
-Object.entries(commands).forEach(([name, command]) => {
-  terminal.registerCommand(name, command.execute);
-  terminal.getContext().env.COMMANDS[name] = command.description;
-});
-
-// DOM Elements
-const historyDiv = document.getElementById("history") as HTMLDivElement;
-const promptDiv = document.getElementById("prompt") as HTMLDivElement;
-
-// Terminal Updates
-const updateTerminal = (input: string, output: string, statusCode: number) => {
-  // Add the command to the history
-  if (input.trim()) {
-    terminal.getContext().history.push(input); // Store the command in the terminal's history
-  }
-
-  // Add a prefix to the new prompt if the status code indicates an error
-  const promptPrefix = statusCode > 1 ? `<span style="color:red;">x</span>` : "";
-
-  // Clean up the prompt itself, ensuring no extra spaces or line breaks
-  const cleanedPrompt = promptDiv.innerHTML
-      .replace(/<input.*?>/i, `<span>${input}</span>`)
-      .replace(/\s+</g, "<");
-
-  // Append the cleaned prompt and the command's output to the history
-  historyDiv.innerHTML += `<div>${cleanedPrompt}</div>`;
-  if (output) {
-    historyDiv.innerHTML += `<div>${output}</div>`;
-  }
-
-  // Set up the new prompt with a fresh input field
-  promptDiv.innerHTML = `${promptPrefix}<span style="color:cornflowerblue;">website</span><span>@</span><span style="color:aqua;">busykoala</span>:<span style="color:lawngreen;" class="pwd">${terminal.getContext().env.PWD}</span>$&nbsp;<input type="text" id="input" autofocus>`;
-
-  // Ensure the new input field is focused
-  const newInputField = document.getElementById("input") as HTMLInputElement;
-  if (newInputField) newInputField.focus();
-
-  // Scroll to the bottom of the page
-  window.scrollTo(0, document.body.scrollHeight);
-};
-
-// Event Listeners
-document.addEventListener("keydown", (e) => {
-  const inputField = document.getElementById("input") as HTMLInputElement;
-
-  if (e.key === "Enter" && inputField) {
-    const input = inputField.value.trim();
-    const result = terminal.execute(input);
-    const { output, statusCode } = result;
-    updateTerminal(input, output, statusCode);
-  }
-  if (e.key === "ArrowUp") {
-    const inputField = document.getElementById("input") as HTMLInputElement;
-    if (inputField) inputField.value = terminal.navigateHistory("up");
-  }
-  if (e.key === "ArrowDown") {
-    const inputField = document.getElementById("input") as HTMLInputElement;
-    if (inputField) inputField.value = terminal.navigateHistory("down");
-  }
-  if (e.key === "Tab") {
-    e.preventDefault();
-    const inputField = document.getElementById("input") as HTMLInputElement;
-    if (inputField) inputField.value = terminal.tabComplete(inputField.value);
-  }
-  if (e.ctrlKey && e.key.toLowerCase() === "l") { // Handle Ctrl+L to clear the terminal
-    e.preventDefault(); // Prevent the default browser behavior for Ctrl+L
-    terminal.execute("clear"); // Execute the 'clear' command
-    updateTerminal("", "", 0); // Clear the terminal visually
-  }
-  if (e.ctrlKey && e.key === 'c') {
-    TerminalStateController.setRunning(false);
-    let interval = TerminalStateController.getInterval();
-    clearInterval(interval); // Stop the interval for the matrix animation
-    const matrixDiv = document.getElementById("matrix-animation");
-    if (matrixDiv) {
-      matrixDiv.innerHTML = "";  // Clear the matrix effect when stopped
-    }
-    updateTerminal('Matrix stopped.', '', 0);  // Optionally display a message when stopped
-  }
-});
-
-// Responsive UI Adjustments
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-);
-document.getElementById("desktop")!.style.display = isMobile ? "none" : "";
-document.getElementById("mobile")!.style.display = isMobile ? "" : "none";
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    initTerminal();
+  });
+} else {
+  initTerminal();
+}
